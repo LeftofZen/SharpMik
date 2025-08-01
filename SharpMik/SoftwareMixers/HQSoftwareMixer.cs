@@ -1,25 +1,24 @@
 ﻿using System;
+using SharpMik.Common;
 using SharpMik.Player;
 
 namespace SharpMik.SoftwareMixers
 {
 	public class HQSoftwareMixer : CommonSoftwareMixer
 	{
-		static int MAXVOL_FACTOR  = (1<<9);
+		const int MAXVOL_FACTOR = 1 << 9;
 
-		static int  SAMPLING_SHIFT = 2;
-		static uint  SAMPLING_FACTOR = (uint)(1<<SAMPLING_SHIFT);
+		const int SAMPLING_SHIFT = 2;
+		static readonly uint SAMPLING_FACTOR = 1 << SAMPLING_SHIFT;
 
-		static int 	FRACBITS = 28;
-		static int  FRACMASK = ((1<<FRACBITS)-1);
+		const int FRACBITS = 28;
+		static readonly int FRACMASK = (1 << FRACBITS) - 1;
 
-		static int  TICKWSIZE = (TICKLSIZE * 2);
-		static int  TICKBSIZE = (TICKWSIZE * 2);
+		const int TICKWSIZE = TICKLSIZE * 2;
 
-		static int  CLICK_SHIFT_BASE = 6;
-		static int	CLICK_SHIFT = (CLICK_SHIFT_BASE + SAMPLING_SHIFT);
-		static int  CLICK_BUFFER = (1 << CLICK_SHIFT);
-
+		const int CLICK_SHIFT_BASE = 6;
+		static readonly int CLICK_SHIFT = CLICK_SHIFT_BASE + SAMPLING_SHIFT;
+		static readonly int CLICK_BUFFER = 1 << CLICK_SHIFT;
 
 		protected override bool MixerInit()
 		{
@@ -27,40 +26,37 @@ namespace SharpMik.SoftwareMixers
 			m_ClickBuffer = CLICK_BUFFER;
 			m_ReverbMultipler = 10;
 
-
 			return false;
 		}
 
-
-
 		int Mix32MonoNormal(short[] srce, int[] dest, int index, int increment, int todo, int place)
 		{
-			short sample=0;
-			int i,f;
+			short sample = 0;
+			int i, f;
 
-			while(todo-- != 0) 
+			while (todo-- != 0)
 			{
 				i = index >> FRACBITS;
 				f = index & FRACMASK;
 
-				sample=(short)(((int)(srce[i]*(FRACMASK+1L-f)) + ((int)srce[i+1]*f)) >> FRACBITS);
-				index+=increment;
+				sample = (short)(((int)(srce[i] * (FRACMASK + 1L - f)) + (srce[i + 1] * f)) >> FRACBITS);
+				index += increment;
 
 				if (m_CurrentVoiceInfo.RampVolume != 0)
 				{
-					dest[place++] += (int)(
-					  (((int)(m_CurrentVoiceInfo.LeftVolumeOld * m_CurrentVoiceInfo.RampVolume) +
+					dest[place++] +=
+					  ((m_CurrentVoiceInfo.LeftVolumeOld * m_CurrentVoiceInfo.RampVolume +
 						  (m_CurrentVoiceInfo.LeftVolumeFactor * (CLICK_BUFFER - m_CurrentVoiceInfo.RampVolume))) *
-						(int)sample) >> CLICK_SHIFT);
+						sample) >> CLICK_SHIFT;
 					m_CurrentVoiceInfo.RampVolume--;
 				}
 				else
 				{
 					if (m_CurrentVoiceInfo.Click != 0)
 					{
-						dest[place++] += (int)(
-						  ((((int)m_CurrentVoiceInfo.LeftVolumeFactor * (CLICK_BUFFER - m_CurrentVoiceInfo.Click)) *
-							  (int)sample) + (m_CurrentVoiceInfo.LastValueLeft * m_CurrentVoiceInfo.Click)) >> CLICK_SHIFT);
+						dest[place++] +=
+						  ((m_CurrentVoiceInfo.LeftVolumeFactor * (CLICK_BUFFER - m_CurrentVoiceInfo.Click) *
+							  sample) + (m_CurrentVoiceInfo.LastValueLeft * m_CurrentVoiceInfo.Click)) >> CLICK_SHIFT;
 						m_CurrentVoiceInfo.Click--;
 					}
 					else
@@ -75,44 +71,43 @@ namespace SharpMik.SoftwareMixers
 			return index;
 		}
 
-
 		int Mix32StereoNormal(short[] srce, int[] dest, int index, int increment, int todo, int place)
 		{
-			short sample=0;
-			int i,f;
+			short sample = 0;
+			int i, f;
 
-			while(todo-- != 0)
+			while (todo-- != 0)
 			{
 				i = index >> FRACBITS;
 				f = index & FRACMASK;
 
-				sample=(short)((((int)srce[i]*(FRACMASK+1L-f)) + ((int)srce[i+1] * f)) >> FRACBITS);
+				sample = (short)(((srce[i] * (FRACMASK + 1L - f)) + (srce[i + 1] * f)) >> FRACBITS);
 				index += increment;
 
 				if (m_CurrentVoiceInfo.RampVolume != 0)
 				{
-					dest[place++] += (int)(
-					  ((((int)m_CurrentVoiceInfo.LeftVolumeOld * m_CurrentVoiceInfo.RampVolume) +
+					dest[place++] +=
+					  (((m_CurrentVoiceInfo.LeftVolumeOld * m_CurrentVoiceInfo.RampVolume) +
 						  (m_CurrentVoiceInfo.LeftVolumeFactor * (CLICK_BUFFER - m_CurrentVoiceInfo.RampVolume))
-						) * (int)sample) >> CLICK_SHIFT);
-					dest[place++] += (int)(
-					  ((((int)m_CurrentVoiceInfo.RightVolumeOld * m_CurrentVoiceInfo.RampVolume) +
+						) * sample) >> CLICK_SHIFT;
+					dest[place++] +=
+					  (((m_CurrentVoiceInfo.RightVolumeOld * m_CurrentVoiceInfo.RampVolume) +
 						  (m_CurrentVoiceInfo.RightVolumeFactor * (CLICK_BUFFER - m_CurrentVoiceInfo.RampVolume))
-						) * (int)sample) >> CLICK_SHIFT);
+						) * sample) >> CLICK_SHIFT;
 					m_CurrentVoiceInfo.RampVolume--;
 				}
 				else
 				{
 					if (m_CurrentVoiceInfo.Click != 0)
 					{
-						dest[place++] += (int)(
-						  (((int)(m_CurrentVoiceInfo.LeftVolumeFactor * (CLICK_BUFFER - m_CurrentVoiceInfo.Click)) *
-							  (int)sample) + (m_CurrentVoiceInfo.LastValueLeft * m_CurrentVoiceInfo.Click))
-							>> CLICK_SHIFT);
-						dest[place++] += (int)(
-						  ((((int)m_CurrentVoiceInfo.RightVolumeFactor * (CLICK_BUFFER - m_CurrentVoiceInfo.Click)) *
-							  (int)sample) + (m_CurrentVoiceInfo.LastValueRight * m_CurrentVoiceInfo.Click))
-							>> CLICK_SHIFT);
+						dest[place++] +=
+						  ((m_CurrentVoiceInfo.LeftVolumeFactor * (CLICK_BUFFER - m_CurrentVoiceInfo.Click) *
+							  sample) + (m_CurrentVoiceInfo.LastValueLeft * m_CurrentVoiceInfo.Click))
+							>> CLICK_SHIFT;
+						dest[place++] +=
+						  ((m_CurrentVoiceInfo.RightVolumeFactor * (CLICK_BUFFER - m_CurrentVoiceInfo.Click) *
+							  sample) + (m_CurrentVoiceInfo.LastValueRight * m_CurrentVoiceInfo.Click))
+							>> CLICK_SHIFT;
 						m_CurrentVoiceInfo.Click--;
 					}
 					else
@@ -122,32 +117,33 @@ namespace SharpMik.SoftwareMixers
 					}
 				}
 			}
-			m_CurrentVoiceInfo.LastValueLeft=m_CurrentVoiceInfo.LeftVolumeFactor*sample;
-			m_CurrentVoiceInfo.LastValueRight=m_CurrentVoiceInfo.RightVolumeFactor*sample;
+
+			m_CurrentVoiceInfo.LastValueLeft = m_CurrentVoiceInfo.LeftVolumeFactor * sample;
+			m_CurrentVoiceInfo.LastValueRight = m_CurrentVoiceInfo.RightVolumeFactor * sample;
 
 			return index;
 		}
 
 		int Mix32StereoSurround(short[] srce, int[] dest, int index, int increment, int todo, int place)
 		{
-			short sample=0;
+			short sample = 0;
 			long whoop;
 			int i, f;
 
-			while(todo-- != 0) 
+			while (todo-- != 0)
 			{
 				i = index >> FRACBITS;
 				f = index & FRACMASK;
 
-				sample=(short)((((int)srce[i]*(FRACMASK+1L-f)) + ((int)srce[i+1]*f)) >> FRACBITS);
-				index+=increment;
+				sample = (short)(((srce[i] * (FRACMASK + 1L - f)) + (srce[i + 1] * f)) >> FRACBITS);
+				index += increment;
 
 				if (m_CurrentVoiceInfo.RampVolume != 0)
 				{
-					whoop = (long)(
-					  (((int)(m_CurrentVoiceInfo.LeftVolumeOld * m_CurrentVoiceInfo.RampVolume) +
+					whoop =
+					  ((m_CurrentVoiceInfo.LeftVolumeOld * m_CurrentVoiceInfo.RampVolume +
 						  (m_CurrentVoiceInfo.LeftVolumeFactor * (CLICK_BUFFER - m_CurrentVoiceInfo.RampVolume))) *
-						(int)sample) >> CLICK_SHIFT);
+						sample) >> CLICK_SHIFT;
 					dest[place++] += (int)whoop;
 					dest[place++] -= (int)whoop;
 					m_CurrentVoiceInfo.RampVolume--;
@@ -156,10 +152,10 @@ namespace SharpMik.SoftwareMixers
 				{
 					if (m_CurrentVoiceInfo.Click != 0)
 					{
-						whoop = (long)(
-						  ((((int)m_CurrentVoiceInfo.LeftVolumeFactor * (CLICK_BUFFER - m_CurrentVoiceInfo.Click)) *
-							  (int)sample) +
-							(m_CurrentVoiceInfo.LastValueLeft * m_CurrentVoiceInfo.Click)) >> CLICK_SHIFT);
+						whoop =
+						  ((m_CurrentVoiceInfo.LeftVolumeFactor * (CLICK_BUFFER - m_CurrentVoiceInfo.Click) *
+							  sample) +
+							(m_CurrentVoiceInfo.LastValueLeft * m_CurrentVoiceInfo.Click)) >> CLICK_SHIFT;
 						dest[place++] += (int)whoop;
 						dest[place++] -= (int)whoop;
 						m_CurrentVoiceInfo.Click--;
@@ -171,15 +167,12 @@ namespace SharpMik.SoftwareMixers
 					}
 				}
 			}
-			m_CurrentVoiceInfo.LastValueLeft=m_CurrentVoiceInfo.LeftVolumeFactor*sample;
-			m_CurrentVoiceInfo.LastValueRight=m_CurrentVoiceInfo.LeftVolumeFactor*sample;
+
+			m_CurrentVoiceInfo.LastValueLeft = m_CurrentVoiceInfo.LeftVolumeFactor * sample;
+			m_CurrentVoiceInfo.LastValueRight = m_CurrentVoiceInfo.LeftVolumeFactor * sample;
 
 			return index;
 		}
-
-
-
-
 
 		long Mix64MonoNormal(short[] srce, int[] dest, long index, long increment, long todo, int place)
 		{
@@ -191,24 +184,24 @@ namespace SharpMik.SoftwareMixers
 				i = index >> FRACBITS;
 				f = index & FRACMASK;
 
-				sample = (short)(((int)(srce[i] * (FRACMASK + 1L - f)) + ((int)srce[i + 1] * f)) >> FRACBITS);
+				sample = (short)(((int)(srce[i] * (FRACMASK + 1L - f)) + (srce[i + 1] * f)) >> FRACBITS);
 				index += increment;
 
 				if (m_CurrentVoiceInfo.RampVolume != 0)
 				{
-					dest[place++] += (int)(
-					  (((int)(m_CurrentVoiceInfo.LeftVolumeOld * m_CurrentVoiceInfo.RampVolume) +
+					dest[place++] +=
+					  ((m_CurrentVoiceInfo.LeftVolumeOld * m_CurrentVoiceInfo.RampVolume +
 						  (m_CurrentVoiceInfo.LeftVolumeFactor * (CLICK_BUFFER - m_CurrentVoiceInfo.RampVolume))) *
-						(int)sample) >> CLICK_SHIFT);
+						sample) >> CLICK_SHIFT;
 					m_CurrentVoiceInfo.RampVolume--;
 				}
 				else
 				{
 					if (m_CurrentVoiceInfo.Click != 0)
 					{
-						dest[place++] += (int)(
-						  ((((int)m_CurrentVoiceInfo.LeftVolumeFactor * (CLICK_BUFFER - m_CurrentVoiceInfo.Click)) *
-							  (int)sample) + (m_CurrentVoiceInfo.LastValueLeft * m_CurrentVoiceInfo.Click)) >> CLICK_SHIFT);
+						dest[place++] +=
+						  ((m_CurrentVoiceInfo.LeftVolumeFactor * (CLICK_BUFFER - m_CurrentVoiceInfo.Click) *
+							  sample) + (m_CurrentVoiceInfo.LastValueLeft * m_CurrentVoiceInfo.Click)) >> CLICK_SHIFT;
 						m_CurrentVoiceInfo.Click--;
 					}
 					else
@@ -222,7 +215,6 @@ namespace SharpMik.SoftwareMixers
 
 			return index;
 		}
-
 
 		long Mix64StereoNormal(short[] srce, int[] dest, long index, long increment, long todo, int place)
 		{
@@ -239,29 +231,29 @@ namespace SharpMik.SoftwareMixers
 
 				if (m_CurrentVoiceInfo.RampVolume != 0)
 				{
-					dest[place++] += (int)(
-					  ((((int)m_CurrentVoiceInfo.LeftVolumeOld * m_CurrentVoiceInfo.RampVolume) +
+					dest[place++] +=
+					  (((m_CurrentVoiceInfo.LeftVolumeOld * m_CurrentVoiceInfo.RampVolume) +
 						  (m_CurrentVoiceInfo.LeftVolumeFactor * (CLICK_BUFFER - m_CurrentVoiceInfo.RampVolume))
-						) * (int)sample) >> CLICK_SHIFT);
-					
-					dest[place++] += (int)(
-					  ((((int)m_CurrentVoiceInfo.RightVolumeOld * m_CurrentVoiceInfo.RampVolume) +
+						) * sample) >> CLICK_SHIFT;
+
+					dest[place++] +=
+					  (((m_CurrentVoiceInfo.RightVolumeOld * m_CurrentVoiceInfo.RampVolume) +
 						  (m_CurrentVoiceInfo.RightVolumeFactor * (CLICK_BUFFER - m_CurrentVoiceInfo.RampVolume))
-						) * (int)sample) >> CLICK_SHIFT);
+						) * sample) >> CLICK_SHIFT;
 					m_CurrentVoiceInfo.RampVolume--;
 				}
 				else
 				{
 					if (m_CurrentVoiceInfo.Click != 0)
 					{
-						dest[place++] += (int)(
-						  (((int)(m_CurrentVoiceInfo.LeftVolumeFactor * (CLICK_BUFFER - m_CurrentVoiceInfo.Click)) *
-							  (int)sample) + (m_CurrentVoiceInfo.LastValueLeft * m_CurrentVoiceInfo.Click))
-							>> CLICK_SHIFT);
-						dest[place++] += (int)(
-						  ((((int)m_CurrentVoiceInfo.RightVolumeFactor * (CLICK_BUFFER - m_CurrentVoiceInfo.Click)) *
-							  (int)sample) + (m_CurrentVoiceInfo.LastValueRight * m_CurrentVoiceInfo.Click))
-							>> CLICK_SHIFT);
+						dest[place++] +=
+						  ((m_CurrentVoiceInfo.LeftVolumeFactor * (CLICK_BUFFER - m_CurrentVoiceInfo.Click) *
+							  sample) + (m_CurrentVoiceInfo.LastValueLeft * m_CurrentVoiceInfo.Click))
+							>> CLICK_SHIFT;
+						dest[place++] +=
+						  ((m_CurrentVoiceInfo.RightVolumeFactor * (CLICK_BUFFER - m_CurrentVoiceInfo.Click) *
+							  sample) + (m_CurrentVoiceInfo.LastValueRight * m_CurrentVoiceInfo.Click))
+							>> CLICK_SHIFT;
 						m_CurrentVoiceInfo.Click--;
 					}
 					else
@@ -271,6 +263,7 @@ namespace SharpMik.SoftwareMixers
 					}
 				}
 			}
+
 			m_CurrentVoiceInfo.LastValueLeft = m_CurrentVoiceInfo.LeftVolumeFactor * sample;
 			m_CurrentVoiceInfo.LastValueRight = m_CurrentVoiceInfo.RightVolumeFactor * sample;
 
@@ -288,15 +281,15 @@ namespace SharpMik.SoftwareMixers
 				i = index >> FRACBITS;
 				f = index & FRACMASK;
 
-				sample = (short)((((int)srce[i] * (FRACMASK + 1L - f)) + ((int)srce[i + 1] * f)) >> FRACBITS);
+				sample = (short)(((srce[i] * (FRACMASK + 1L - f)) + (srce[i + 1] * f)) >> FRACBITS);
 				index += increment;
 
 				if (m_CurrentVoiceInfo.RampVolume != 0)
 				{
-					whoop = (long)(
-					  (((int)(m_CurrentVoiceInfo.LeftVolumeOld * m_CurrentVoiceInfo.RampVolume) +
+					whoop =
+					  ((m_CurrentVoiceInfo.LeftVolumeOld * m_CurrentVoiceInfo.RampVolume +
 						  (m_CurrentVoiceInfo.LeftVolumeFactor * (CLICK_BUFFER - m_CurrentVoiceInfo.RampVolume))) *
-						(int)sample) >> CLICK_SHIFT);
+						sample) >> CLICK_SHIFT;
 					dest[place++] += (int)whoop;
 					dest[place++] -= (int)whoop;
 					m_CurrentVoiceInfo.RampVolume--;
@@ -305,10 +298,10 @@ namespace SharpMik.SoftwareMixers
 				{
 					if (m_CurrentVoiceInfo.Click != 0)
 					{
-						whoop = (long)(
-						  ((((int)m_CurrentVoiceInfo.LeftVolumeFactor * (CLICK_BUFFER - m_CurrentVoiceInfo.Click)) *
-							  (int)sample) +
-							(m_CurrentVoiceInfo.LastValueLeft * m_CurrentVoiceInfo.Click)) >> CLICK_SHIFT);
+						whoop =
+						  ((m_CurrentVoiceInfo.LeftVolumeFactor * (CLICK_BUFFER - m_CurrentVoiceInfo.Click) *
+							  sample) +
+							(m_CurrentVoiceInfo.LastValueLeft * m_CurrentVoiceInfo.Click)) >> CLICK_SHIFT;
 						dest[place++] += (int)whoop;
 						dest[place++] -= (int)whoop;
 						m_CurrentVoiceInfo.Click--;
@@ -320,21 +313,20 @@ namespace SharpMik.SoftwareMixers
 					}
 				}
 			}
+
 			m_CurrentVoiceInfo.LastValueLeft = m_CurrentVoiceInfo.LeftVolumeFactor * sample;
 			m_CurrentVoiceInfo.LastValueRight = m_CurrentVoiceInfo.LeftVolumeFactor * sample;
 
 			return index;
 		}
 
-
-
 		void AddChannel(int[] buff, int todo)
 		{
 			long end, done;
 
-			int place = 0;
+			var place = 0;
 
-			short[] s = m_Samples[m_CurrentVoiceInfo.Handle];
+			var s = m_Samples[m_CurrentVoiceInfo.Handle];
 
 			if (s == null)
 			{
@@ -347,19 +339,19 @@ namespace SharpMik.SoftwareMixers
 			{
 				long endpos;
 
-				if ((m_CurrentVoiceInfo.Flags & SharpMikCommon.SF_REVERSE) == SharpMikCommon.SF_REVERSE)
+				if ((m_CurrentVoiceInfo.Flags & Constants.SF_REVERSE) == Constants.SF_REVERSE)
 				{
 					/* The sample is playing in reverse */
-					if ((m_CurrentVoiceInfo.Flags & SharpMikCommon.SF_LOOP) == SharpMikCommon.SF_LOOP && (m_CurrentVoiceInfo.CurrentSampleIndex < m_IdxlPos))
+					if ((m_CurrentVoiceInfo.Flags & Constants.SF_LOOP) == Constants.SF_LOOP && (m_CurrentVoiceInfo.CurrentSampleIndex < m_IdxlPos))
 					{
 						/* the sample is looping and has reached the loopstart index */
-						if ((m_CurrentVoiceInfo.Flags & SharpMikCommon.SF_BIDI) == SharpMikCommon.SF_BIDI)
+						if ((m_CurrentVoiceInfo.Flags & Constants.SF_BIDI) == Constants.SF_BIDI)
 						{
 							/* sample is doing bidirectional loops, so 'bounce' the
 							   current index against the idxlpos */
 							m_CurrentVoiceInfo.CurrentSampleIndex = m_IdxlPos + (m_IdxlPos - m_CurrentVoiceInfo.CurrentSampleIndex);
 							int value = m_CurrentVoiceInfo.Flags;
-							value &= ~SharpMikCommon.SF_REVERSE;
+							value &= ~Constants.SF_REVERSE;
 							m_CurrentVoiceInfo.Flags = (ushort)value;
 							m_CurrentVoiceInfo.CurrentIncrement = -m_CurrentVoiceInfo.CurrentIncrement;
 						}
@@ -384,14 +376,14 @@ namespace SharpMik.SoftwareMixers
 				else
 				{
 					/* The sample is playing forward */
-					if ((m_CurrentVoiceInfo.Flags & SharpMikCommon.SF_LOOP) == SharpMikCommon.SF_LOOP && (m_CurrentVoiceInfo.CurrentSampleIndex >= m_IdxlEnd))
+					if ((m_CurrentVoiceInfo.Flags & Constants.SF_LOOP) == Constants.SF_LOOP && (m_CurrentVoiceInfo.CurrentSampleIndex >= m_IdxlEnd))
 					{
 						/* the sample is looping, check the loopend index */
-						if ((m_CurrentVoiceInfo.Flags & SharpMikCommon.SF_BIDI) == SharpMikCommon.SF_BIDI)
+						if ((m_CurrentVoiceInfo.Flags & Constants.SF_BIDI) == Constants.SF_BIDI)
 						{
 							/* sample is doing bidirectional loops, so 'bounce' the
 							   current index against the idxlend */
-							m_CurrentVoiceInfo.Flags |= SharpMikCommon.SF_REVERSE;
+							m_CurrentVoiceInfo.Flags |= Constants.SF_REVERSE;
 							m_CurrentVoiceInfo.CurrentIncrement = -m_CurrentVoiceInfo.CurrentIncrement;
 							m_CurrentVoiceInfo.CurrentSampleIndex = m_IdxlEnd - (m_CurrentVoiceInfo.CurrentSampleIndex - m_IdxlEnd);
 						}
@@ -415,7 +407,7 @@ namespace SharpMik.SoftwareMixers
 					}
 				}
 
-				end = (m_CurrentVoiceInfo.Flags & SharpMikCommon.SF_REVERSE) == SharpMikCommon.SF_REVERSE ? (m_CurrentVoiceInfo.Flags & SharpMikCommon.SF_LOOP) == SharpMikCommon.SF_LOOP ? m_IdxlPos : 0 : (m_CurrentVoiceInfo.Flags & SharpMikCommon.SF_LOOP) == SharpMikCommon.SF_LOOP ? m_IdxlEnd : m_IdxSize;
+				end = (m_CurrentVoiceInfo.Flags & Constants.SF_REVERSE) == Constants.SF_REVERSE ? (m_CurrentVoiceInfo.Flags & Constants.SF_LOOP) == Constants.SF_LOOP ? m_IdxlPos : 0 : (m_CurrentVoiceInfo.Flags & Constants.SF_LOOP) == Constants.SF_LOOP ? m_IdxlEnd : m_IdxSize;
 
 				/* if the sample is not blocked... */
 				if ((end == m_CurrentVoiceInfo.CurrentSampleIndex) || (m_CurrentVoiceInfo.CurrentIncrement == 0))
@@ -424,7 +416,7 @@ namespace SharpMik.SoftwareMixers
 				}
 				else
 				{
-					done = Math.Min((end - m_CurrentVoiceInfo.CurrentSampleIndex) / m_CurrentVoiceInfo.CurrentIncrement + 1, todo);
+					done = Math.Min(((end - m_CurrentVoiceInfo.CurrentSampleIndex) / m_CurrentVoiceInfo.CurrentIncrement) + 1, todo);
 					if (done < 0)
 					{
 						done = 0;
@@ -437,7 +429,7 @@ namespace SharpMik.SoftwareMixers
 					break;
 				}
 
-				endpos = m_CurrentVoiceInfo.CurrentSampleIndex + done * m_CurrentVoiceInfo.CurrentIncrement;
+				endpos = m_CurrentVoiceInfo.CurrentSampleIndex + (done * m_CurrentVoiceInfo.CurrentIncrement);
 
 				if (m_CurrentVoiceInfo.Volume != 0 || m_CurrentVoiceInfo.RampVolume != 0)
 				{
@@ -446,36 +438,36 @@ namespace SharpMik.SoftwareMixers
 					{
 						if (m_IsStereo)
 						{
-							if ((m_CurrentVoiceInfo.Panning == SharpMikCommon.PAN_SURROUND) && (ModDriver.Mode & SharpMikCommon.DMODE_SURROUND) == SharpMikCommon.DMODE_SURROUND)
+							if ((m_CurrentVoiceInfo.Panning == Constants.PAN_SURROUND) && (ModDriver.Mode & Constants.DMODE_SURROUND) == Constants.DMODE_SURROUND)
 							{
-								m_CurrentVoiceInfo.CurrentSampleIndex = (long)Mix32StereoSurround(s, buff, (int)m_CurrentVoiceInfo.CurrentSampleIndex, (int)m_CurrentVoiceInfo.CurrentIncrement, (int)done, place);
+								m_CurrentVoiceInfo.CurrentSampleIndex = Mix32StereoSurround(s, buff, (int)m_CurrentVoiceInfo.CurrentSampleIndex, (int)m_CurrentVoiceInfo.CurrentIncrement, (int)done, place);
 							}
 							else
 							{
-								m_CurrentVoiceInfo.CurrentSampleIndex = (long)Mix32StereoNormal(s, buff, (int)m_CurrentVoiceInfo.CurrentSampleIndex, (int)m_CurrentVoiceInfo.CurrentIncrement, (int)done, place);
+								m_CurrentVoiceInfo.CurrentSampleIndex = Mix32StereoNormal(s, buff, (int)m_CurrentVoiceInfo.CurrentSampleIndex, (int)m_CurrentVoiceInfo.CurrentIncrement, (int)done, place);
 							}
 						}
 						else
 						{
-							m_CurrentVoiceInfo.CurrentSampleIndex = (long)Mix32MonoNormal(s, buff, (int)m_CurrentVoiceInfo.CurrentSampleIndex, (int)m_CurrentVoiceInfo.CurrentIncrement, (int)done, place);
+							m_CurrentVoiceInfo.CurrentSampleIndex = Mix32MonoNormal(s, buff, (int)m_CurrentVoiceInfo.CurrentSampleIndex, (int)m_CurrentVoiceInfo.CurrentIncrement, (int)done, place);
 						}
 					}
 					else
 					{
 						if (m_IsStereo)
 						{
-							if ((m_CurrentVoiceInfo.Panning == SharpMikCommon.PAN_SURROUND) && (ModDriver.Mode & SharpMikCommon.DMODE_SURROUND) == SharpMikCommon.DMODE_SURROUND)
+							if ((m_CurrentVoiceInfo.Panning == Constants.PAN_SURROUND) && (ModDriver.Mode & Constants.DMODE_SURROUND) == Constants.DMODE_SURROUND)
 							{
-								m_CurrentVoiceInfo.CurrentSampleIndex = (long)Mix64StereoSurround(s, buff, m_CurrentVoiceInfo.CurrentSampleIndex, m_CurrentVoiceInfo.CurrentIncrement, done, place);
+								m_CurrentVoiceInfo.CurrentSampleIndex = Mix64StereoSurround(s, buff, m_CurrentVoiceInfo.CurrentSampleIndex, m_CurrentVoiceInfo.CurrentIncrement, done, place);
 							}
 							else
 							{
-								m_CurrentVoiceInfo.CurrentSampleIndex = (long)Mix64StereoNormal(s, buff, m_CurrentVoiceInfo.CurrentSampleIndex, m_CurrentVoiceInfo.CurrentIncrement, done, place);
+								m_CurrentVoiceInfo.CurrentSampleIndex = Mix64StereoNormal(s, buff, m_CurrentVoiceInfo.CurrentSampleIndex, m_CurrentVoiceInfo.CurrentIncrement, done, place);
 							}
 						}
 						else
 						{
-							m_CurrentVoiceInfo.CurrentSampleIndex = (long)Mix64MonoNormal(s, buff, m_CurrentVoiceInfo.CurrentSampleIndex, m_CurrentVoiceInfo.CurrentIncrement, done, place);
+							m_CurrentVoiceInfo.CurrentSampleIndex = Mix64MonoNormal(s, buff, m_CurrentVoiceInfo.CurrentSampleIndex, m_CurrentVoiceInfo.CurrentIncrement, done, place);
 						}
 					}
 				}
@@ -492,15 +484,13 @@ namespace SharpMik.SoftwareMixers
 
 		}
 
-
-
 		static void Mix32To16_Normal(sbyte[] dste, int[] srce, int count, int dstePlace)
 		{
 			int x1, x2, tmpx;
 			int i;
-			int srcePlace = 0;
-			int attenuation = 1;
-			int bound = 32768;
+			var srcePlace = 0;
+			var attenuation = 1;
+			var bound = 32768;
 
 			for (count /= (int)SAMPLING_FACTOR; count != 0; count--)
 			{
@@ -517,7 +507,7 @@ namespace SharpMik.SoftwareMixers
 					tmpx += x1 + x2;
 				}
 
-				int val = (int)(tmpx / SAMPLING_FACTOR);
+				var val = (int)(tmpx / SAMPLING_FACTOR);
 
 				if (BitConverter.IsLittleEndian)
 				{
@@ -536,9 +526,9 @@ namespace SharpMik.SoftwareMixers
 		{
 			int x1, x2, x3, x4, tmpx, tmpy;
 			int i;
-			int srcePlace = 0;
-			int attenuation = 1;
-			int bound = 32768;
+			var srcePlace = 0;
+			var attenuation = 1;
+			var bound = 32768;
 
 			for (count /= (int)SAMPLING_FACTOR; count != 0; count--)
 			{
@@ -560,9 +550,8 @@ namespace SharpMik.SoftwareMixers
 					tmpy += x2 + x4;
 				}
 
-
-				int valx = (int)(tmpx / SAMPLING_FACTOR);
-				int valy = (int)(tmpy / SAMPLING_FACTOR);
+				var valx = (int)(tmpx / SAMPLING_FACTOR);
+				var valy = (int)(tmpy / SAMPLING_FACTOR);
 
 				if (BitConverter.IsLittleEndian)
 				{
@@ -584,30 +573,29 @@ namespace SharpMik.SoftwareMixers
 			}
 		}
 
-
-
 		protected override uint WriteSamples(sbyte[] buf, uint todo)
 		{
-			int left, portion = 0;			
+			int left, portion = 0;
 			int t, pan, vol;
 
 			todo *= SAMPLING_FACTOR;
 
-			int bufferPlace = 0;
-			int bufPlace = 0;
+			var bufferPlace = 0;
+			var bufPlace = 0;
 
 			while (todo != 0)
 			{
 				if (m_TickLeft == 0)
 				{
-					if ((m_VcMode & SharpMikCommon.DMODE_SOFT_MUSIC) == SharpMikCommon.DMODE_SOFT_MUSIC)
+					if ((m_VcMode & Constants.DMODE_SOFT_MUSIC) == Constants.DMODE_SOFT_MUSIC)
 					{
 						ModPlayer.Player_HandleTick();
 					}
 
-					m_TickLeft = (ModDriver.MixFrequency * 125 * SAMPLING_FACTOR) / (ModDriver.Bpm * 50);
+					m_TickLeft = ModDriver.MixFrequency * 125 * SAMPLING_FACTOR / (ModDriver.Bpm * 50);
 					m_TickLeft &= ~(SAMPLING_FACTOR - 1);
 				}
+
 				left = (int)Math.Min(m_TickLeft, todo);
 
 				bufferPlace = bufPlace;
@@ -618,7 +606,7 @@ namespace SharpMik.SoftwareMixers
 
 				while (left != 0)
 				{
-					portion = (int)Math.Min(left, m_SamplesThatFit);					
+					portion = (int)Math.Min(left, m_SamplesThatFit);
 					Array.Clear(m_VcTickBuf, 0, TICKLSIZE);
 
 					for (t = 0; t < m_VcSoftChannel; t++)
@@ -643,7 +631,7 @@ namespace SharpMik.SoftwareMixers
 						{
 							m_CurrentVoiceInfo.CurrentIncrement = ((long)(m_CurrentVoiceInfo.Frequency << (FRACBITS - SAMPLING_SHIFT))) / ModDriver.MixFrequency;
 
-							if ((m_CurrentVoiceInfo.Flags & SharpMikCommon.SF_REVERSE) != 0)
+							if ((m_CurrentVoiceInfo.Flags & Constants.SF_REVERSE) != 0)
 							{
 								m_CurrentVoiceInfo.CurrentIncrement = -m_CurrentVoiceInfo.CurrentIncrement;
 							}
@@ -656,21 +644,20 @@ namespace SharpMik.SoftwareMixers
 
 							if (m_IsStereo)
 							{
-								if (pan != SharpMikCommon.PAN_SURROUND)
+								if (pan != Constants.PAN_SURROUND)
 								{
-									m_CurrentVoiceInfo.LeftVolumeFactor = (vol * (SharpMikCommon.PAN_RIGHT - pan)) >> 8;
+									m_CurrentVoiceInfo.LeftVolumeFactor = (vol * (Constants.PAN_RIGHT - pan)) >> 8;
 									m_CurrentVoiceInfo.RightVolumeFactor = (vol * pan) >> 8;
 								}
 								else
 								{
-									m_CurrentVoiceInfo.LeftVolumeFactor = m_CurrentVoiceInfo.RightVolumeFactor = (vol * 256) / 480;
+									m_CurrentVoiceInfo.LeftVolumeFactor = m_CurrentVoiceInfo.RightVolumeFactor = vol * 256 / 480;
 								}
 							}
 							else
 							{
 								m_CurrentVoiceInfo.LeftVolumeFactor = vol;
 							}
-
 
 							m_IdxSize = (m_CurrentVoiceInfo.Size != 0) ? ((long)m_CurrentVoiceInfo.Size << FRACBITS) - 1 : 0;
 							m_IdxlEnd = (m_CurrentVoiceInfo.RepeatEndPosition != 0) ? ((long)m_CurrentVoiceInfo.RepeatEndPosition << FRACBITS) - 1 : 0;
@@ -682,20 +669,21 @@ namespace SharpMik.SoftwareMixers
 
 					if (ModDriver.Reverb != 0)
 					{
-						if (ModDriver.Reverb > 15) 
+						if (ModDriver.Reverb > 15)
+						{
 							ModDriver.Reverb = 15;
+						}
 
 						//MixReverb(vc_tickbuf, portion);
 					}
 
+					FireCallBack(portion);
 
-                    FireCallBack(portion);
-
-                    if ((m_VcMode & SharpMikCommon.DMODE_16BITS) == SharpMikCommon.DMODE_16BITS)
+					if ((m_VcMode & Constants.DMODE_16BITS) == Constants.DMODE_16BITS)
 					{
 						if (m_IsStereo)
 						{
-							Mix32To16_Stereo(buf,m_VcTickBuf,portion,bufferPlace);
+							Mix32To16_Stereo(buf, m_VcTickBuf, portion, bufferPlace);
 						}
 						else
 						{
@@ -706,7 +694,6 @@ namespace SharpMik.SoftwareMixers
 					{
 						//Mix32To8(buf, m_VcTickBuf, count, (int)bufferPlace);
 					}
-
 
 					bufferPlace += (int)(samples2bytes((uint)portion) / SAMPLING_FACTOR);
 					left -= portion;

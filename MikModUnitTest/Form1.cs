@@ -6,28 +6,24 @@ using System.Windows.Forms;
 using System.Threading;
 using System.IO;
 using System.Diagnostics;
-
-
-using SharpMik;
+using SharpMik.Common;
 
 namespace MikModUnitTest
 {
 	public partial class Form1 : Form
 	{
 		MemSharpMikTest m_SharpTest;
-		Process m_ExeProcess = null;
+		Process m_ExeProcess;
 
+		UnitTestOptions m_Options = new();
 
-		UnitTestOptions m_Options = new UnitTestOptions();
+		const string s_OptionsFileName = "options.xml";
 
-		const String s_OptionsFileName = "options.xml";
-
-		bool m_Loading = false;
+		bool m_Loading;
 
 		Thread m_RunThread;
 
 		float m_CSTestTime;
-
 
 		float m_TestTime;
 
@@ -44,7 +40,7 @@ namespace MikModUnitTest
 			base.OnLoad(e);
 
 			UnitTestHelpers.FindRepeats();
-			if (UnitTestHelpers.ReadXML<UnitTestOptions>(s_OptionsFileName, ref m_Options))
+			if (UnitTestHelpers.ReadXML(s_OptionsFileName, ref m_Options))
 			{
 				m_Loading = true;
 				textBox1.Text = m_Options.MikModCExe;
@@ -70,12 +66,14 @@ namespace MikModUnitTest
 
 		private void button2_Click(object sender, EventArgs e)
 		{
-			OpenFileDialog dialog = new OpenFileDialog();
-			dialog.Filter = "*.exe|*.exe";
+			var dialog = new OpenFileDialog
+			{
+				Filter = "*.exe|*.exe"
+			};
 
-			DialogResult result = dialog.ShowDialog();
+			var result = dialog.ShowDialog();
 
-			if (result == System.Windows.Forms.DialogResult.OK)
+			if (result == DialogResult.OK)
 			{
 				textBox1.Text = dialog.FileName;
 			}
@@ -83,9 +81,9 @@ namespace MikModUnitTest
 
 		private void button4_Click(object sender, EventArgs e)
 		{
-			FolderBrowserDialog dialog = new FolderBrowserDialog();
+			var dialog = new FolderBrowserDialog();
 
-			DialogResult result = dialog.ShowDialog();
+			var result = dialog.ShowDialog();
 
 			if (result == DialogResult.OK)
 			{
@@ -113,16 +111,17 @@ namespace MikModUnitTest
 				button2.Enabled = false;
 				button4.Enabled = false;
 
-				m_RunThread = new Thread(new ThreadStart(TestThread));
-				m_RunThread.Name = "Test Thread";
+				m_RunThread = new Thread(new ThreadStart(TestThread))
+				{
+					Name = "Test Thread"
+				};
 				m_RunThread.Start();
 			}
 		}
 
-
 		void ResetButtons()
 		{
-			System.Windows.Forms.MethodInvoker action = delegate
+			MethodInvoker action = delegate
 			{
 				Start.Enabled = true;
 
@@ -136,7 +135,7 @@ namespace MikModUnitTest
 				button4.Enabled = true;
 			};
 
-			this.BeginInvoke(action);
+			BeginInvoke(action);
 		}
 
 		private void Result_Enter(object sender, EventArgs e)
@@ -146,9 +145,9 @@ namespace MikModUnitTest
 
 		private void button1_Click(object sender, EventArgs e)
 		{
-			FolderBrowserDialog dialog = new FolderBrowserDialog();
+			var dialog = new FolderBrowserDialog();
 
-			DialogResult result = dialog.ShowDialog();
+			var result = dialog.ShowDialog();
 
 			if (result == DialogResult.OK)
 			{
@@ -156,27 +155,13 @@ namespace MikModUnitTest
 			}
 		}
 
+		private void textBox1_TextChanged(object sender, EventArgs e) => UpdateSaveFile();
 
+		private void textBox2_TextChanged(object sender, EventArgs e) => UpdateSaveFile();
 
-		private void textBox1_TextChanged(object sender, EventArgs e)
-		{
-			UpdateSaveFile();
-		}
+		private void textBox3_TextChanged(object sender, EventArgs e) => UpdateSaveFile();
 
-		private void textBox2_TextChanged(object sender, EventArgs e)
-		{
-			UpdateSaveFile();
-		}
-
-		private void textBox3_TextChanged(object sender, EventArgs e)
-		{
-			UpdateSaveFile();
-		}
-
-		private void textBox4_TextChanged(object sender, EventArgs e)
-		{
-			UpdateSaveFile();
-		}
+		private void textBox4_TextChanged(object sender, EventArgs e) => UpdateSaveFile();
 
 		void UpdateSaveFile()
 		{
@@ -187,83 +172,72 @@ namespace MikModUnitTest
 				m_Options.TestDirectory = textBox4.Text;
 				m_Options.CopyBrokenMods = checkBox1.Checked;
 
-				UnitTestHelpers.WriteXML<UnitTestOptions>(s_OptionsFileName, m_Options);
+				UnitTestHelpers.WriteXML(s_OptionsFileName, m_Options);
 			}
 		}
 
-
-
-
 		void TestThread()
 		{
-			DateTime totalStart = DateTime.Now;
+			var totalStart = DateTime.Now;
 			s_StopThread = false;
 			//List<String> modFiles = new List<string>();
-			List<TestResult> testResults = new List<TestResult>();
+			var testResults = new List<TestResult>();
 
 			//modFiles.Clear();
 
 			var files = Directory.EnumerateFiles(m_Options.TestModFolder, "*.*", SearchOption.AllDirectories);
 
-			List<String> modFiles = new List<String>();
+			var modFiles = new List<string>();
 
-			foreach (String name in files)
+			foreach (var name in files)
 			{
-				if (SharpMikCommon.MatchesExtentions(name))
+				if (Helpers.MatchesExtensions(name))
 				{
 					modFiles.Add(name);
 				}
 			}
 
+			var count = 0;
 
-			int count = 0;
-
-
-			System.Windows.Forms.MethodInvoker action = delegate
+			MethodInvoker action = delegate
 			{
 				progressBar2.Maximum = modFiles.Count();
 				progressBar2.Value = 0;
 			};
 			progressBar2.BeginInvoke(action);
 
-
-
-
-
-
-			float total = 0.0f;
-			int passed = 0;
-			int failed = 0;
-
+			var total = 0.0f;
+			var passed = 0;
+			var failed = 0;
 
 			action = delegate
 			{
-				label7.Text = String.Format("Testing {0} of {1} mods in {5} seconds, Passed: {2}, Failed: {3}, Passing percentage {4}", count, modFiles.Count(), passed, failed, 0.0, (DateTime.Now - totalStart).TotalSeconds);
+				label7.Text = string.Format("Testing {0} of {1} mods in {5} seconds, Passed: {2}, Failed: {3}, Passing percentage {4}", count, modFiles.Count(), passed, failed, 0.0, (DateTime.Now - totalStart).TotalSeconds);
 			};
 			label7.BeginInvoke(action);
 
-			foreach (String fileName in modFiles)
+			foreach (var fileName in modFiles)
 			{
-				TestResult result = new TestResult();
+				var result = new TestResult();
 
-				DateTime start = DateTime.Now;
+				var start = DateTime.Now;
 				if (DoStreamTest(fileName, ref result))
 				{
 					result = TestWavAndStream(fileName);
 				}
-				TimeSpan span = DateTime.Now - start;
+
+				var span = DateTime.Now - start;
 
 				result.CTime = m_CTestTime;
 				result.CSharpTime = m_CSTestTime;
 				result.TotalTestTime = (float)span.TotalSeconds;
 				testResults.Add(result);
 
-
 				if (!result.Passed && checkBox1.Checked)
 				{
-					String failedFolder = Path.Combine(m_Options.TestDirectory, "Failed");
-					String justFileName = Path.GetFileName(fileName);
-					String failName = Path.Combine(failedFolder, justFileName);
+					var failedFolder = Path.Combine(m_Options.TestDirectory, "Failed");
+					var justFileName = Path.GetFileName(fileName);
+					var failName = Path.Combine(failedFolder, justFileName);
 
 					if (!File.Exists(failName))
 					{
@@ -277,12 +251,12 @@ namespace MikModUnitTest
 				}
 
 				// Write out the results after each test, this will help if the app crashes.
-				UnitTestHelpers.WriteXML<List<TestResult>>(Path.Combine(m_Options.TestDirectory, "test.xml"), testResults);
+				UnitTestHelpers.WriteXML(Path.Combine(m_Options.TestDirectory, "test.xml"), testResults);
 
 				total += result.MatchPercentage;
 				count++;
 
-				Object[] data = new Object[7];
+				var data = new object[7];
 				data[0] = Path.GetFileName(fileName);
 				data[1] = result.MatchPercentage;
 				data[3] = m_CTestTime;
@@ -292,16 +266,16 @@ namespace MikModUnitTest
 
 				if (result.Passed)
 				{
-					data[2] = global::MikModUnitTest.Properties.Resources.Pass;
+					data[2] = Properties.Resources.Pass;
 					passed++;
 				}
 				else
 				{
-					data[2] = global::MikModUnitTest.Properties.Resources.Fail;
+					data[2] = Properties.Resources.Fail;
 					failed++;
 				}
 
-				if (this.IsHandleCreated)
+				if (IsHandleCreated)
 				{
 					action = delegate
 					{
@@ -317,7 +291,7 @@ namespace MikModUnitTest
 
 					action = delegate
 					{
-						label7.Text = String.Format("Testing {0} of {1} mods in {5} seconds, Passed: {2}, Failed: {3}, Passing percentage {4}", count, modFiles.Count(), passed, failed, total / count, (DateTime.Now - totalStart).TotalSeconds);
+						label7.Text = string.Format("Testing {0} of {1} mods in {5} seconds, Passed: {2}, Failed: {3}, Passing percentage {4}", count, modFiles.Count(), passed, failed, total / count, (DateTime.Now - totalStart).TotalSeconds);
 						//label7.Text = String.Format("Testing {0} of {1} mods, Passed: {2}, Failed: {3}, Passing percentage {4}", count, modFiles.Count(), passed, failed, total / count);
 					};
 					label7.BeginInvoke(action);
@@ -333,7 +307,7 @@ namespace MikModUnitTest
 			ResetButtons();
 		}
 
-		bool DoStreamTest(String fileName, ref TestResult result)
+		bool DoStreamTest(string fileName, ref TestResult result)
 		{
 			m_SharpTest.Start(fileName);
 			if (!RunMikC(fileName))
@@ -350,7 +324,7 @@ namespace MikModUnitTest
 					Thread.Sleep(100);
 				}
 
-				if (String.IsNullOrEmpty(m_SharpTest.ErrorMessage))
+				if (string.IsNullOrEmpty(m_SharpTest.ErrorMessage))
 				{
 					m_CSTestTime = m_SharpTest.TimeTaken;
 					return true;
@@ -371,12 +345,14 @@ namespace MikModUnitTest
 
 		bool RunMikC(string mod)
 		{
-			DateTime start = DateTime.Now;
-			ProcessStartInfo startInfo = new ProcessStartInfo();
-			startInfo.CreateNoWindow = true;
-			startInfo.UseShellExecute = false;
-			startInfo.FileName = m_Options.MikModCExe;
-			startInfo.Arguments = "\"" + mod + "\" \"" + Path.Combine(m_Options.TestDirectory, "mikmodC.wav") + "\"";
+			var start = DateTime.Now;
+			var startInfo = new ProcessStartInfo
+			{
+				CreateNoWindow = true,
+				UseShellExecute = false,
+				FileName = m_Options.MikModCExe,
+				Arguments = "\"" + mod + "\" \"" + Path.Combine(m_Options.TestDirectory, "mikmodC.wav") + "\""
+			};
 			//startInfo.RedirectStandardOutput = true;
 
 			using (m_ExeProcess = Process.Start(startInfo))
@@ -384,16 +360,17 @@ namespace MikModUnitTest
 				m_ExeProcess.PriorityClass = ProcessPriorityClass.RealTime;
 				m_ExeProcess.WaitForExit();
 			}
+
 			m_ExeProcess = null;
 
-			TimeSpan span = DateTime.Now - start;
+			var span = DateTime.Now - start;
 			m_CTestTime = (float)span.TotalSeconds;
 
-			String mikModCWav = Path.Combine(m_Options.TestDirectory, "mikmodC.wav");
+			var mikModCWav = Path.Combine(m_Options.TestDirectory, "mikmodC.wav");
 
 			if (File.Exists(mikModCWav))
 			{
-				FileInfo info = new FileInfo(mikModCWav);
+				var info = new FileInfo(mikModCWav);
 
 				if (info.Length > 44)
 				{
@@ -410,26 +387,26 @@ namespace MikModUnitTest
 			}
 		}
 
-
 		TestResult TestWavAndStream(string mod)
 		{
-			DateTime start = DateTime.Now;
-			TestResult result = new TestResult();
-			result.ModName = mod;
-			int diffBytes = 0;
-			bool reportedMissMatch = false;
+			var start = DateTime.Now;
+			var result = new TestResult
+			{
+				ModName = mod
+			};
+			var diffBytes = 0;
+			var reportedMissMatch = false;
 
-			String mikModCWav = Path.Combine(m_Options.TestDirectory, "mikmodC.wav");
+			var mikModCWav = Path.Combine(m_Options.TestDirectory, "mikmodC.wav");
 
 			try
 			{
 				if (File.Exists(mikModCWav))
 				{
-					BinaryReader mikModCReader = new BinaryReader(new FileStream(mikModCWav, FileMode.Open));
+					var mikModCReader = new BinaryReader(new FileStream(mikModCWav, FileMode.Open));
 
-					long cSize = mikModCReader.BaseStream.Length;
-					long cSharpSize = m_SharpTest.MemStream.Length;
-
+					var cSize = mikModCReader.BaseStream.Length;
+					var cSharpSize = m_SharpTest.MemStream.Length;
 
 					if (cSize == 44) // header size of a wav
 					{
@@ -454,7 +431,7 @@ namespace MikModUnitTest
 
 							mikModCReader.BaseStream.Seek(44, SeekOrigin.Begin);
 							m_SharpTest.MemStream.Seek(0, SeekOrigin.Begin);
-							long size = cSize - 44;
+							var size = cSize - 44;
 							for (long i = 0; i < size; i++)
 							{
 								cByte = mikModCReader.ReadByte();
@@ -468,11 +445,12 @@ namespace MikModUnitTest
 										Console.WriteLine("First miss matched byte is at: " + i);
 										result.FirstMissMatchByte = i;
 									}
+
 									diffBytes++;
 								}
 							}
 
-							result.MatchPercentage = 100.0f * (float)(cSize - diffBytes) / (float)cSize;
+							result.MatchPercentage = 100.0f * (cSize - diffBytes) / cSize;
 							if (diffBytes > 0)
 							{
 								result.Passed = false;
@@ -484,8 +462,6 @@ namespace MikModUnitTest
 						}
 					}
 
-
-
 					mikModCReader.Close();
 					mikModCReader.Dispose();
 				}
@@ -496,31 +472,23 @@ namespace MikModUnitTest
 				result.Passed = false;
 			}
 
-			TimeSpan span = DateTime.Now - start;
+			var span = DateTime.Now - start;
 			m_TestTime = (float)span.TotalSeconds;
-
 
 			return result;
 		}
 
-		static bool s_StopThread = false;
-		private void Stop_Click(object sender, EventArgs e)
-		{
-			s_StopThread = true;
-		}
+		static bool s_StopThread;
+		private void Stop_Click(object sender, EventArgs e) => s_StopThread = true;
 
-		private void checkBox1_CheckedChanged(object sender, EventArgs e)
-		{
-			UpdateSaveFile();
-		}
+		private void checkBox1_CheckedChanged(object sender, EventArgs e) => UpdateSaveFile();
 	}
-
 
 	public class TestResult
 	{
-		public String ModName { get; set; }
+		public string ModName { get; set; }
 		public float MatchPercentage { get; set; }
-		public String Error { get; set; }
+		public string Error { get; set; }
 		public bool Passed { get; set; }
 		public long FirstMissMatchByte { get; set; }
 		public float CTime { get; set; }

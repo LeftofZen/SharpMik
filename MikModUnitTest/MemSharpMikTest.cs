@@ -2,11 +2,11 @@
 using System.IO;
 using SharpMik.Drivers;
 
-
 using SharpMik.Extentions;
 using SharpMik.Player;
 using SharpMik;
 using System.Threading;
+using SharpMik.Common;
 
 namespace MikModUnitTest
 {
@@ -17,11 +17,7 @@ namespace MikModUnitTest
 
 		public static uint BUFFERSIZE = 32768;
 
-
-		public MemoryStream MemStream
-		{
-			get { return m_MemoryStream; }
-		}
+		public MemoryStream MemStream => m_MemoryStream;
 
 		public MemDriver()
 		{
@@ -37,25 +33,19 @@ namespace MikModUnitTest
 		{
 		}
 
-		public override bool IsPresent()
-		{
-			return true;
-		}
+		public override bool IsPresent() => true;
 
 		public override bool Init()
-		{			
+		{
 			m_Audiobuffer = new sbyte[BUFFERSIZE];
 
 			return base.Init();
 		}
 
-		public override void PlayStop()
-		{
-			base.PlayStop();
-		}
+		public override void PlayStop() => base.PlayStop();
 
 		public override bool PlayStart()
-		{			
+		{
 			m_MemoryStream = new MemoryStream();
 			return base.PlayStart();
 		}
@@ -67,42 +57,32 @@ namespace MikModUnitTest
 
 		public override void Update()
 		{
-			uint done = WriteBytes(m_Audiobuffer, BUFFERSIZE);
+			var done = WriteBytes(m_Audiobuffer, BUFFERSIZE);
 			m_MemoryStream.Write(m_Audiobuffer, 0, (int)done);
 		}
 	}
 
-
 	public class MemSharpMikTest
 	{
-		String m_FileName;
-		MemDriver m_MemDriver;
+		string m_FileName;
+		readonly MemDriver m_MemDriver;
 		Module mod;
 
-		Thread m_Thread;
-		String m_Error;
+		readonly Thread m_Thread;
+		string m_Error;
 
 		float m_TimeTaken;
 
 		bool m_Running;
-		bool m_Working = false;
+		bool m_Working;
 
-		AutoResetEvent m_Blocker = new AutoResetEvent(false);
+		readonly AutoResetEvent m_Blocker = new(false);
 
-		public String ErrorMessage
-		{
-			get { return m_Error; }
-		}
+		public string ErrorMessage => m_Error;
 
-		public MemoryStream MemStream
-		{
-			get { return m_MemDriver.MemStream; }
-		}
+		public MemoryStream MemStream => m_MemDriver.MemStream;
 
-		public float TimeTaken
-		{
-			get { return m_TimeTaken; }
-		}
+		public float TimeTaken => m_TimeTaken;
 
 		public MemSharpMikTest()
 		{
@@ -111,13 +91,15 @@ namespace MikModUnitTest
 			ModDriver.MikMod_Init("");
 			m_Running = true;
 
-			m_Thread = new Thread(new ThreadStart(WorkThread));
-			m_Thread.Name = "SharpTest";
-			m_Thread.Priority = ThreadPriority.Highest;
+			m_Thread = new Thread(new ThreadStart(WorkThread))
+			{
+				Name = "SharpTest",
+				Priority = ThreadPriority.Highest
+			};
 			m_Thread.Start();
 		}
 
-		public void Start(String fileName)
+		public void Start(string fileName)
 		{
 			m_FileName = fileName;
 			m_Error = null;
@@ -150,16 +132,15 @@ namespace MikModUnitTest
 				m_Blocker.WaitOne();
 				if (m_FileName != null)
 				{
-					DateTime startTime = DateTime.Now;
+					var startTime = DateTime.Now;
 					try
 					{
 						mod = ModuleLoader.Load(m_FileName);
-						int iterations = 0;
-
+						var iterations = 0;
 
 						if (mod != null)
 						{
-							mod.loop = false;
+							mod.Loop = false;
 							ModPlayer.Player_Start(mod);
 
 							// Trap for wrapping mods.
@@ -174,14 +155,15 @@ namespace MikModUnitTest
 							ModuleLoader.UnLoad(mod);
 						}
 					}
-					catch (System.Exception ex)
+					catch (Exception ex)
 					{
 						m_Error = ex.Message;
 					}
 
-					TimeSpan span = DateTime.Now - startTime;
-					m_TimeTaken = (float)span.TotalSeconds;					
+					var span = DateTime.Now - startTime;
+					m_TimeTaken = (float)span.TotalSeconds;
 				}
+
 				m_Working = false;
 			}
 		}

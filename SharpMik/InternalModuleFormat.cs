@@ -29,13 +29,13 @@ namespace SharpMik
 	the 'unioperands' table.
 
 	*/
-	public class munitrk
+	public class InternalModuleFormat
 	{
 		#region const variables
 
-		const int BUFPAGE   = 128;
+		const int BUFPAGE = 128;
 
-		public static ushort[] unioperands ={
+		public static ushort[] unioperands = [
 			0, /* not used */
 			1, /* UNI_NOTE */
 			1, /* UNI_INSTRUMENT */
@@ -98,9 +98,8 @@ namespace SharpMik
 			0, /* UNI_MEDEFFECTF2 */
 			0, /* UNI_MEDEFFECTF3 */
 			2, /* UNI_OKTARP */
-		};
+		];
 		#endregion
-
 
 		#region Read Functions
 		byte[] m_RowData; /* startadress of a row */
@@ -112,8 +111,8 @@ namespace SharpMik
 		public void UniSetRow(byte[] t, int place)
 		{
 			m_RowData = t;
-			m_CurrentRowPosition    = place;
-			m_RowEnd = (m_CurrentRowPosition + (m_RowData[m_CurrentRowPosition++] & 0x1f));
+			m_CurrentRowPosition = place;
+			m_RowEnd = m_CurrentRowPosition + (m_RowData[m_CurrentRowPosition++] & 0x1f);
 		}
 
 		public byte UniGetByte()
@@ -130,16 +129,13 @@ namespace SharpMik
 			return lastbyte;// = (byte)((rowpc<rowend)? (rowstart[rowpc++]):0);
 		}
 
-		public ushort UniGetWord()
-		{
-			return (ushort)(((ushort)UniGetByte()<<8)|UniGetByte());
-		}
+		public ushort UniGetWord() => (ushort)((UniGetByte() << 8) | UniGetByte());
 
 		public void UniSkipOpcode()
 		{
-			if (lastbyte < unioperands.Length) 
+			if (lastbyte < unioperands.Length)
 			{
-				ushort t = unioperands[lastbyte];
+				var t = unioperands[lastbyte];
 
 				while (t-- != 0)
 				{
@@ -150,11 +146,11 @@ namespace SharpMik
 
 		/* Finds the address of row number 'row' in the UniMod(tm) stream 't' returns
 		   NULL if the row can't be found. */
-		public int UniFindRow(byte[] t, ushort row)
+		public static int UniFindRow(byte[] t, ushort row)
 		{
-			byte c,l;
+			byte c, l;
 
-			int place = 0;
+			var place = 0;
 
 			if (t != null)
 			{
@@ -168,32 +164,35 @@ namespace SharpMik
 					}
 
 					l = (byte)((c >> 5) + 1);       /* extract repeat value */
-					
-					if (l > row) 
+
+					if (l > row)
+					{
 						break;    /* reached wanted row? . return pointer */
+					}
+
 					row -= l;           /* haven't reached row yet.. update row */
 					place += c & 0x1f;
 				}
 			}
-			
+
 			return place;
 		}
 		#endregion
 
 		#region Writing routines
 
-		byte[] m_WriteBuffer;			/* pointer to the temporary unitrk buffer */
-		ushort m_WriteBufferSize;		/* buffer size */
+		byte[] m_WriteBuffer;           /* pointer to the temporary unitrk buffer */
+		ushort m_WriteBufferSize;       /* buffer size */
 
 		ushort m_WriteBufferPosition;   /* buffer cursor */
-		ushort m_CurrentRowIndex;		/* current row index */
-		ushort m_LastRowIndex;			/* previous row index */
+		ushort m_CurrentRowIndex;       /* current row index */
+		ushort m_LastRowIndex;          /* previous row index */
 
 		public void UniReset()
 		{
-			m_CurrentRowIndex     = 0;   /* reset index to rep/len byte */
-			m_WriteBufferPosition     = 1;   /* first opcode will be written to index 1 */
-			m_LastRowIndex     = 0;   /* no previous row yet */
+			m_CurrentRowIndex = 0;   /* reset index to rep/len byte */
+			m_WriteBufferPosition = 1;   /* first opcode will be written to index 1 */
+			m_LastRowIndex = 0;   /* no previous row yet */
 			m_WriteBuffer[0] = 0;   /* clear rep/len byte */
 		}
 
@@ -210,6 +209,7 @@ namespace SharpMik
 				m_WriteBufferSize += BUFPAGE;
 				Array.Resize(ref m_WriteBuffer, m_WriteBufferSize);
 			}
+
 			return true;
 		}
 
@@ -231,7 +231,7 @@ namespace SharpMik
 			}
 		}
 
-		public bool MyCmp(byte[] data, int a, int b, int l)
+		public static bool MyCmp(byte[] data, int a, int b, int l)
 		{
 			ushort t;
 
@@ -242,6 +242,7 @@ namespace SharpMik
 					return false;
 				}
 			}
+
 			return true;
 		}
 
@@ -249,24 +250,24 @@ namespace SharpMik
 		   pointers to start a new row. */
 		public void UniNewline()
 		{
-			ushort n,l,len;
+			ushort n, l, len;
 
-			n = (ushort)((m_WriteBuffer[m_LastRowIndex]>>5)+1);     /* repeat of previous row */
-			l = (ushort)(m_WriteBuffer[m_LastRowIndex]&0x1f);     /* length of previous row */
+			n = (ushort)((m_WriteBuffer[m_LastRowIndex] >> 5) + 1);     /* repeat of previous row */
+			l = (ushort)(m_WriteBuffer[m_LastRowIndex] & 0x1f);     /* length of previous row */
 
-			len = (ushort)(m_WriteBufferPosition-m_CurrentRowIndex);            /* length of current row */
+			len = (ushort)(m_WriteBufferPosition - m_CurrentRowIndex);            /* length of current row */
 
 			/* Now, check if the previous and the current row are identical.. when they
 			   are, just increase the repeat field of the previous row */
 			//  MyCmp(&unibuf[lastp+1],&unibuf[unitt+1],len-1)
-			if(n<8 && len==l && MyCmp(m_WriteBuffer, m_LastRowIndex+1,m_CurrentRowIndex+1,len-1)) 
+			if (n < 8 && len == l && MyCmp(m_WriteBuffer, m_LastRowIndex + 1, m_CurrentRowIndex + 1, len - 1))
 			{
-				m_WriteBuffer[m_LastRowIndex]+=0x20;
-				m_WriteBufferPosition = (ushort)(m_CurrentRowIndex+1);
-			} 
-			else 
+				m_WriteBuffer[m_LastRowIndex] += 0x20;
+				m_WriteBufferPosition = (ushort)(m_CurrentRowIndex + 1);
+			}
+			else
 			{
-				if (UniExpand(m_CurrentRowIndex-m_WriteBufferPosition)) 
+				if (UniExpand(m_CurrentRowIndex - m_WriteBufferPosition))
 				{
 					/* current and previous row aren't equal... update the pointers */
 					m_WriteBuffer[m_CurrentRowIndex] = (byte)len;
@@ -275,7 +276,6 @@ namespace SharpMik
 				}
 			}
 		}
-
 
 		public byte[] UniDup()
 		{
@@ -286,7 +286,7 @@ namespace SharpMik
 				return null;
 			}
 
-			m_WriteBuffer[m_CurrentRowIndex] = 0;		
+			m_WriteBuffer[m_CurrentRowIndex] = 0;
 
 			d = new byte[m_WriteBufferPosition];
 
@@ -294,7 +294,6 @@ namespace SharpMik
 
 			return d;
 		}
-
 
 		public void UniCleanup()
 		{

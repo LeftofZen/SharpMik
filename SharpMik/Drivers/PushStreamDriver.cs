@@ -4,21 +4,15 @@ using SharpMik.Extentions;
 
 namespace SharpMik.Drivers
 {
-    
-
 
 	public class PushStreamDriver : VirtualSoftwareDriver
-    {
+	{
 		MemoryStream m_MemoryStream;
 		sbyte[] m_Audiobuffer;
 
 		public static uint BUFFERSIZE = 32768;
 
-
-		public MemoryStream MemoryStream
-		{
-			get { return m_MemoryStream; }
-		}
+		public MemoryStream MemoryStream => m_MemoryStream;
 
 		public PushStreamDriver()
 		{
@@ -34,25 +28,19 @@ namespace SharpMik.Drivers
 		{
 		}
 
-		public override bool IsPresent()
-		{
-			return true;
-		}
+		public override bool IsPresent() => true;
 
 		public override bool Init()
-		{			
+		{
 			m_Audiobuffer = new sbyte[BUFFERSIZE];
 
 			return base.Init();
 		}
 
-		public override void PlayStop()
-		{
-			base.PlayStop();
-		}
+		public override void PlayStop() => base.PlayStop();
 
 		public override bool PlayStart()
-		{			
+		{
 			m_MemoryStream = new MemoryStream();
 			return base.PlayStart();
 		}
@@ -64,7 +52,7 @@ namespace SharpMik.Drivers
 
 		public override void Update()
 		{
-			uint done = WriteBytes(m_Audiobuffer, BUFFERSIZE);
+			var done = WriteBytes(m_Audiobuffer, BUFFERSIZE);
 			m_MemoryStream.Write(m_Audiobuffer, 0, (int)done);
 		}
 	}

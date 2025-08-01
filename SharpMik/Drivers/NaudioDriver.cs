@@ -1,17 +1,18 @@
 ﻿using System;
 using NAudio.Wave;
+using SharpMik.Common;
 using SharpMik.Player;
 
 namespace SharpMik.Drivers
 {
-	class NAudioTrackerStream : NAudio.Wave.WaveStream
+	class NAudioTrackerStream : WaveStream
 	{
-		private WaveFormat waveFormat;
-		NaudioDriver m_Driver;
+		private readonly WaveFormat waveFormat;
+		readonly NaudioDriver m_Driver;
 		public NAudioTrackerStream(NaudioDriver driver)
 		{
-			int bitness = (ModDriver.Mode & SharpMikCommon.DMODE_16BITS) == SharpMikCommon.DMODE_16BITS ? 16 : 8;
-			int channels = (ModDriver.Mode & SharpMikCommon.DMODE_STEREO) == SharpMikCommon.DMODE_STEREO ? 2 : 1;
+			var bitness = (ModDriver.Mode & Constants.DMODE_16BITS) == Constants.DMODE_16BITS ? 16 : 8;
+			var channels = (ModDriver.Mode & Constants.DMODE_STEREO) == Constants.DMODE_STEREO ? 2 : 1;
 
 			waveFormat = new WaveFormat(ModDriver.MixFrequency, bitness, channels);
 
@@ -24,29 +25,20 @@ namespace SharpMik.Drivers
 			set {; }
 		}
 
-		public override long Length
-		{
-			get { return 0; }// { return _mixer.idxsize; }
-		}
+		public override long Length => 0;
 
-		public override WaveFormat WaveFormat
-		{
-			get { return waveFormat; }
-		}
+		public override WaveFormat WaveFormat => waveFormat;
 
-		public override int Read(byte[] buffer, int offset, int count)
-		{
-			return m_Driver.GetBuffer(buffer, offset, count);
-		}
+		public override int Read(byte[] buffer, int offset, int count) => m_Driver.GetBuffer(buffer, offset, count);
 	}
 
 	public class NaudioDriver : VirtualSoftwareDriver
 	{
 		IWavePlayer waveOut;
 		NAudioTrackerStream m_NAudioStream;
-		bool stopped = false;
+		bool stopped;
 
-		Object mutext = new Object();
+		readonly object mutext = new();
 
 		public NaudioDriver()
 		{
@@ -57,7 +49,6 @@ namespace SharpMik.Drivers
 			m_SoftVoiceLimit = 255;
 			m_AutoUpdating = true;
 		}
-
 
 		public override void CommandLine(string command)
 		{
@@ -71,16 +62,17 @@ namespace SharpMik.Drivers
 				uint done = 0;
 				if (!stopped)
 				{
-					sbyte[] buf = new sbyte[count];
+					var buf = new sbyte[count];
 					done = WriteBytes(buf, (uint)count);
 					Buffer.BlockCopy(buf, 0, buffer, offset, count);
 				}
 				else
 				{
-					for (int i = 0; i < count; i++)
+					for (var i = 0; i < count; i++)
 					{
 						buffer[offset + i] = 0;
 					}
+
 					done = (uint)count;
 				}
 
@@ -88,10 +80,7 @@ namespace SharpMik.Drivers
 			}
 		}
 
-		public override bool IsPresent()
-		{
-			return true;
-		}
+		public override bool IsPresent() => true;
 
 		public override bool Init()
 		{
@@ -114,7 +103,6 @@ namespace SharpMik.Drivers
 					m_NAudioStream = new NAudioTrackerStream(this);
 					waveOut.Init(m_NAudioStream);
 				}
-
 
 				waveOut.Play();
 
@@ -140,14 +128,8 @@ namespace SharpMik.Drivers
 
 		}
 
-		public override void Pause()
-		{
-			waveOut.Pause();
-		}
+		public override void Pause() => waveOut.Pause();
 
-		public override void Resume()
-		{
-			waveOut.Play();
-		}
+		public override void Resume() => waveOut.Play();
 	}
 }

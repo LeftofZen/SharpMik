@@ -3,6 +3,4 @@
 bin
 obj
 packages
-/.vs/*
-/.vs/ProjectEvaluation/*
-/.vs/ProjectEvaluation/sharpmik.projects.v9.bin
+.vs/

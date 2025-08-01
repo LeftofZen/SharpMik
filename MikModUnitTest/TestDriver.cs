@@ -9,8 +9,8 @@ namespace MikModUnitTest
 		sbyte[] m_Audiobuffer;
 		public static uint BUFFERSIZE = 32768;
 
-		long m_Place = 0;
-		bool m_Failed = false;
+		long m_Place;
+		bool m_Failed;
 
 		public TestDriver()
 		{
@@ -22,25 +22,15 @@ namespace MikModUnitTest
 			m_AutoUpdating = false;
 		}
 
+		public bool Failed => m_Failed;
 
-		public bool Failed
-		{
-			get { return m_Failed; }
-		}
-
-		public void SetCWav(byte[] data)
-		{
-			m_CWav = data;
-		}
+		public void SetCWav(byte[] data) => m_CWav = data;
 
 		public override void CommandLine(string command)
 		{
 		}
 
-		public override bool IsPresent()
-		{
-			return true;
-		}
+		public override bool IsPresent() => true;
 
 		public override bool Init()
 		{
@@ -49,10 +39,7 @@ namespace MikModUnitTest
 			return base.Init();
 		}
 
-		public override void PlayStop()
-		{
-			base.PlayStop();
-		}
+		public override void PlayStop() => base.PlayStop();
 
 		public override bool PlayStart()
 		{
@@ -68,19 +55,19 @@ namespace MikModUnitTest
 
 		public override void Update()
 		{
-			uint done = WriteBytes(m_Audiobuffer, BUFFERSIZE);
+			var done = WriteBytes(m_Audiobuffer, BUFFERSIZE);
 
 			for (uint i = 0; i < done; i++)
 			{
-				if((byte)(m_Audiobuffer[i]) != m_CWav[m_Place])
+				if ((byte)m_Audiobuffer[i] != m_CWav[m_Place])
 				{
 					m_Failed = true;
 					return;
 				}
+
 				m_Place++;
 			}
 		}
-
 
 	}
 }

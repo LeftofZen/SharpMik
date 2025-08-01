@@ -6,7 +6,7 @@ namespace SharpMik.Extentions
 	{
 		public static void Write(this BinaryWriter value, sbyte[] buffer, int start, int count)
 		{
-			for (int i = 0; i < count; i++)
+			for (var i = 0; i < count; i++)
 			{
 				value.Write(buffer[start + i]);
 			}
@@ -14,16 +14,15 @@ namespace SharpMik.Extentions
 
 		public static void Write(this MemoryStream value, sbyte[] buffer, int start, int count)
 		{
-			for (int i = 0; i < count; i++)
-			{				
+			for (var i = 0; i < count; i++)
+			{
 				value.WriteByte((byte)buffer[start + i]);
 			}
 		}
 
-
 		public static void Memset(this byte[] buf, byte value, int count)
 		{
-			for (int i = 0; i < count && i < buf.Length; i++)
+			for (var i = 0; i < count && i < buf.Length; i++)
 			{
 				buf[i] = value;
 			}
@@ -31,7 +30,7 @@ namespace SharpMik.Extentions
 
 		public static void Memset(this sbyte[] buf, sbyte value, int count)
 		{
-			for (int i = 0; i < count && i < buf.Length; i++)
+			for (var i = 0; i < count && i < buf.Length; i++)
 			{
 				buf[i] = value;
 			}
@@ -39,7 +38,7 @@ namespace SharpMik.Extentions
 
 		public static void Memset(this ushort[] buf, ushort value, int count)
 		{
-			for (int i = 0; i < count && i < buf.Length; i++)
+			for (var i = 0; i < count && i < buf.Length; i++)
 			{
 				buf[i] = value;
 			}

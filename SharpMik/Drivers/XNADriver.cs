@@ -42,13 +42,12 @@
 //			return true;
 //		}
 
-
 //		public override bool Init()
 //		{
 //			m_SignedAudiobuffer = new sbyte[BUFFERSIZE];
 //			m_Audiobuffer = new byte[BUFFERSIZE];
 
-//			m_SoundInstance = new DynamicSoundEffectInstance(ModDriver.MixFreq, (ModDriver.Mode & SharpMikCommon.DMODE_STEREO) == SharpMikCommon.DMODE_STEREO ? AudioChannels.Stereo: AudioChannels.Mono);
+//			m_SoundInstance = new DynamicSoundEffectInstance(ModDriver.MixFreq, (ModDriver.Mode & Constants.DMODE_STEREO) == Constants.DMODE_STEREO ? AudioChannels.Stereo: AudioChannels.Mono);
 //			m_SoundInstance.BufferNeeded += new EventHandler<EventArgs>(m_SoundInstance_BufferNeeded);
 
 //			return base.Init();
@@ -69,7 +68,6 @@
 //			}
 //		}
 
-
 //		public override bool PlayStart()
 //		{
 //			m_Playing = true;
@@ -83,7 +81,6 @@
 //			m_SoundInstance.Stop();
 //			base.PlayStop();
 //		}
-
 
 //		public override void Pause()
 //		{

@@ -23,7 +23,6 @@ namespace SharpMik.IO
 		public bool Seek(int offset, SeekOrigin origin)
 		{
 			BaseStream.Seek(offset, origin);
-
 			return BaseStream.Position < BaseStream.Length;
 		}
 
@@ -31,9 +30,9 @@ namespace SharpMik.IO
 		{
 			try
 			{
-				return (int)(BaseStream.Position);
+				return (int)BaseStream.Position;
 			}
-			catch (System.IO.IOException)
+			catch (IOException)
 			{
 				return -1;
 			}
@@ -43,18 +42,15 @@ namespace SharpMik.IO
 		{
 			try
 			{
-				return (BaseStream.Position > BaseStream.Length);
+				return BaseStream.Position > BaseStream.Length;
 			}
-			catch (System.IO.IOException)
+			catch (IOException)
 			{
 				return true;
 			}
 		}
 
-		public void Rewind()
-		{
-			Seek(0, SeekOrigin.Begin);
-		}
+		public void Rewind() => Seek(0, SeekOrigin.Begin);
 		#endregion
 
 		#region byte / sbyte functions
@@ -62,7 +58,7 @@ namespace SharpMik.IO
 		{
 			try
 			{
-				return (byte)this.ReadByte();
+				return ReadByte();
 			}
 			catch
 			{
@@ -73,32 +69,24 @@ namespace SharpMik.IO
 
 		public virtual sbyte Read_sbyte()
 		{
-			try
-			{
-				return (sbyte)this.ReadByte();
-			}
-			catch (System.IO.IOException ioe1)
-			{
-				throw ioe1;
-			}
+			return (sbyte)ReadByte();
 		}
-
 
 		public virtual bool Read_bytes(byte[] buffer, int number)
 		{
-			int pos = 0; 
+			var pos = 0;
 			while (number > 0)
 			{
-				buffer[pos++] = Read_byte(); 
+				buffer[pos++] = Read_byte();
 				number--;
-			} 
-			
+			}
+
 			return !isEOF();
 		}
 
 		public virtual bool Read_bytes(sbyte[] buffer, int number)
 		{
-			int pos = 0;
+			var pos = 0;
 			while (number > 0)
 			{
 				buffer[pos++] = (sbyte)Read_byte();
@@ -110,19 +98,20 @@ namespace SharpMik.IO
 
 		public virtual bool Read_bytes(ushort[] buffer, int number)
 		{
-			int pos = 0; while (number > 0)
+			var pos = 0;
+			while (number > 0)
 			{
-				buffer[pos++] = (ushort)Read_byte();
+				buffer[pos++] = Read_byte();
 				number--;
 			}
 
 			return !isEOF();
 		}
 
-
 		public virtual bool Read_bytes(char[] buffer, int number)
 		{
-			int pos = 0; while (number > 0)
+			var pos = 0;
+			while (number > 0)
 			{
 				buffer[pos++] = (char)Read_byte();
 				number--;
@@ -131,12 +120,12 @@ namespace SharpMik.IO
 			return !isEOF();
 		}
 
-
 		public virtual bool Read_bytes(short[] buffer, int number)
 		{
-			int pos = 0; while (number > 0)
+			var pos = 0;
+			while (number > 0)
 			{
-				buffer[pos++] = (short)Read_byte();
+				buffer[pos++] = Read_byte();
 				number--;
 			}
 
@@ -147,15 +136,14 @@ namespace SharpMik.IO
 		#region short / ushort functions
 		public virtual ushort Read_Motorola_ushort()
 		{
-			byte b1 = this.ReadByte();
-			byte b2 = this.ReadByte();
+			var b1 = ReadByte();
+			var b2 = ReadByte();
 
-			int ushort1 = (int)b1;
-			int ushort2 = (int)b2;
+			var ushort1 = (int)b1;
+			var ushort2 = (int)b2;
 
-			ushort result = (ushort)(ushort1 << 8);
-			result = (ushort)(result | ushort2);
-			return result;
+			var result = (ushort)(ushort1 << 8);
+			return (ushort)(result | ushort2);
 		}
 
 		public virtual ushort Read_Intel_ushort()
@@ -165,32 +153,34 @@ namespace SharpMik.IO
 			return result;
 		}
 
-
 		public virtual short Read_Motorola_short()
 		{
-			short result = (short)(Read_byte() << 8);
-			result |= (short)Read_byte();
+			var result = (short)(Read_byte() << 8);
+			result |= Read_byte();
 			return result;
 		}
 
 		public virtual bool Read_Intel_ushorts(ushort[] buffer, int number)
 		{
-			int pos = 0; while (number > 0)
+			var pos = 0;
+			while (number > 0)
 			{
-				buffer[pos++] = Read_Intel_ushort(); 
+				buffer[pos++] = Read_Intel_ushort();
 				number--;
-			} 
+			}
+
 			return !isEOF();
 		}
 
-		public virtual bool Read_Intel_ushorts(ushort[] buffer,int offset, int number)
+		public virtual bool Read_Intel_ushorts(ushort[] buffer, int offset, int number)
 		{
-			int pos = 0; 
+			var pos = 0;
 			while (number > 0 && offset + pos < buffer.Length)
 			{
 				buffer[offset + pos++] = Read_Intel_ushort();
 				number--;
 			}
+
 			return !isEOF();
 		}
 
@@ -203,34 +193,40 @@ namespace SharpMik.IO
 
 		public virtual bool read_Motorola_shorts(short[] buffer, int number)
 		{
-			int pos = 0; while (number > 0)
+			var pos = 0;
+			while (number > 0)
 			{
-				buffer[pos++] = Read_Motorola_short(); number--;
-			} return !isEOF();
+				buffer[pos++] = Read_Motorola_short();
+				number--;
+			}
+
+			return !isEOF();
 		}
 
 		public virtual bool read_Intel_shorts(short[] buffer, int number)
 		{
-			int pos = 0; while (number > 0)
+			var pos = 0;
+			while (number > 0)
 			{
-				buffer[pos++] = Read_Intel_short(); number--;
-			} return !isEOF();
+				buffer[pos++] = Read_Intel_short();
+				number--;
+			}
+
+			return !isEOF();
 		}
 		#endregion
-
-
 
 		#region int / uint functions
 		public virtual uint Read_Motorola_uint()
 		{
-			int result = (Read_Motorola_ushort()) << 16;
+			var result = (Read_Motorola_ushort()) << 16;
 			result |= Read_Motorola_ushort();
 			return (uint)result;
 		}
 
 		public virtual int Read_Motorola_uints(uint[] buffer, int number)
 		{
-			int pos = 0; 
+			var pos = 0;
 			while (number > 0)
 			{
 				buffer[pos++] = Read_Motorola_uint();
@@ -249,40 +245,26 @@ namespace SharpMik.IO
 
 		public virtual bool Read_Intel_uints(uint[] buffer, int number)
 		{
-			int pos = 0; while (number > 0)
+			var pos = 0;
+			while (number > 0)
 			{
 				buffer[pos++] = Read_Intel_uint();
 				number--;
 			}
+
 			return !isEOF();
 		}
 
+		public virtual int Read_Motorola_int() => (int)Read_Motorola_uint();
 
-		public virtual int Read_Motorola_int()
-		{
-			return ((int)Read_Motorola_uint());
-		}
-
-		public virtual int Read_Intel_int()
-		{
-			return ((int)Read_Intel_uint());
-		}
+		public virtual int Read_Intel_int() => (int)Read_Intel_uint();
 		#endregion
-
 
 		public string Read_String(int length)
 		{
-			try
-			{
-				byte[] tmpBuffer = new byte[length];
-				this.Read(tmpBuffer, 0, length);
-
-				return System.Text.UTF8Encoding.UTF8.GetString(tmpBuffer, 0, length).Trim(new char[] {'\0'});
-			}
-			catch (System.IO.IOException ioe1)
-			{
-				throw ioe1;
-			}
+			var tmpBuffer = new byte[length];
+			Read(tmpBuffer, 0, length);
+			return System.Text.Encoding.UTF8.GetString(tmpBuffer, 0, length).Trim(['\0']);
 		}
 	}
 }

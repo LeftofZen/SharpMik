@@ -1,52 +1,51 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
-using SharpMik;
 using SharpMik.Player;
 using SharpMik.Drivers;
 
 using System.IO;
+using SharpMik.Common;
 
 namespace SharpMilk
 {
-	public partial class Form1 : Form
+	public partial class MainForm : Form
 	{
-		Module m_Mod = null;
-		bool m_Playing = false;
+		Module m_Mod;
+		bool m_Playing;
 		MikMod m_Player;
 
-		public Form1()
+		public MainForm()
 		{
 			InitializeComponent();
 			// Ensure the form has minimize, maximize, and close buttons
-			this.ControlBox = true;
-			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.Sizable;
-			this.MinimizeBox = true;
-			this.MaximizeBox = true;
+			ControlBox = true;
+			FormBorderStyle = FormBorderStyle.Sizable;
+			MinimizeBox = true;
+			MaximizeBox = true;
 
 			m_Player = new MikMod();
 			m_Player.PlayerStateChangeEvent += new ModPlayer.PlayerStateChangedEvent(m_Player_PlayerStateChangeEvent);
 
-			trackBar1.Maximum = 99;
+			tbSongPosition.Maximum = 99;
 		}
 
 		void m_Player_PlayerStateChangeEvent(ModPlayer.PlayerState state)
 		{
-			if (state == ModPlayer.PlayerState.kStopped)
+			if (state == ModPlayer.PlayerState.Stopped)
 			{
 				Next();
 			}
 			else
 			{
-				int place = (int)(100.0f * m_Player.GetProgress());
+				var place = (int)(100.0f * MikMod.GetProgress());
 
 				MethodInvoker action = delegate
 				{
-					trackBar1.Value = place;
+					tbSongPosition.Value = place;
 				};
-				trackBar1.BeginInvoke(action);
+				tbSongPosition.BeginInvoke(action);
 			}
-
 		}
 
 		protected override void OnLoad(EventArgs e)
@@ -55,33 +54,25 @@ namespace SharpMilk
 			PlayPauseMod.Enabled = false;
 			StopMod.Enabled = false;
 
-			ModDriver.Mode = (ushort)(ModDriver.Mode | SharpMikCommon.DMODE_NOISEREDUCTION);
+			ModDriver.Mode = (ushort)(ModDriver.Mode | Constants.DMODE_NOISEREDUCTION);
 			try
 			{
 				m_Player.Init<NaudioDriver>("");
 
-				DateTime start = DateTime.Now;
+				var start = DateTime.Now;
 			}
-			catch (System.Exception ex)
+			catch (Exception ex)
 			{
 				Console.WriteLine(ex);
 			}
-
-		}
-
-
-
-		private void toolStrip1_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
-		{
-
 		}
 
 		private void OpenMod_Click(object sender, EventArgs e)
 		{
-			OpenFileDialog dialog = new OpenFileDialog();
-			var extentions = SharpMikCommon.ModFileExtentions;
+			var dialog = new OpenFileDialog();
+			var extentions = Helpers.ModFileExtensions;
+			var filters = "All (*.*)|*.*|";
 
-			String filters = "All (*.*)|*.*|";
 			foreach (var item in extentions)
 			{
 				filters += "(*" + item + ")|*" + item + "|";
@@ -92,40 +83,41 @@ namespace SharpMilk
 				dialog.Filter = filters.Substring(0, filters.Length - 1);
 			}
 
-			DialogResult result = dialog.ShowDialog();
+			var result = dialog.ShowDialog();
 
 			if (result == DialogResult.OK)
 			{
 				m_Mod = m_Player.LoadModule(dialog.FileName);
 
-
 				if (m_Mod != null)
 				{
-					toolStripLabel1.Text = m_Mod.songname;
+					tslCurrentlyPlaying.Text = m_Mod.SongName;
+					pgCurrentlyPlaying.SelectedObject = m_Mod;
 				}
+
 				PlayPauseMod.Enabled = true;
 				StopMod.Enabled = false;
 
 				m_Playing = false;
 				m_WasPlaying = false;
-				PlayPauseMod.Image = global::SharpMikTester.Properties.Resources.PlayHS;
+				PlayPauseMod.Image = SharpMikTester.Properties.Resources.PlayHS;
 			}
 		}
 
-		bool m_WasPlaying = false;
+		bool m_WasPlaying;
 		private void PlayPauseMod_Click(object sender, EventArgs e)
 		{
 			if (m_Playing)
 			{
 				m_Playing = false;
 				m_WasPlaying = true;
-				PlayPauseMod.Image = global::SharpMikTester.Properties.Resources.PlayHS;
+				PlayPauseMod.Image = SharpMikTester.Properties.Resources.PlayHS;
 				ModPlayer.Player_TogglePause();
 			}
 			else
 			{
 				m_Playing = true;
-				PlayPauseMod.Image = global::SharpMikTester.Properties.Resources.PauseHS;
+				PlayPauseMod.Image = SharpMikTester.Properties.Resources.PauseHS;
 
 				if (m_WasPlaying)
 				{
@@ -133,10 +125,8 @@ namespace SharpMilk
 				}
 				else
 				{
-					m_Player.Play(m_Mod);
-
+					MikMod.Play(m_Mod);
 					StopMod.Enabled = true;
-
 					OpenMod.Enabled = false;
 				}
 			}
@@ -151,41 +141,25 @@ namespace SharpMilk
 			StopMod.Enabled = false;
 		}
 
-		private void CloseApp_Click(object sender, EventArgs e)
-		{
-			ModPlayer.Player_Stop();
-
-			ModDriver.MikMod_Exit();
-			this.Close();
-		}
-
-		private void toolStripComboBox1_Click(object sender, EventArgs e)
-		{
-
-		}
-
-
-		List<String> m_FileList = new List<String>();
-		int place = 0;
+		List<string> m_FileList = new();
+		int place;
 
 		private void toolStripButton1_Click(object sender, EventArgs e)
 		{
-			FolderBrowserDialog dialog = new FolderBrowserDialog();
-
-			DialogResult result = dialog.ShowDialog();
-
+			var dialog = new FolderBrowserDialog();
+			var result = dialog.ShowDialog();
 
 			if (result == DialogResult.OK)
 			{
 				var modFiles = Directory.EnumerateFiles(dialog.SelectedPath, "*.*", SearchOption.AllDirectories);
 				listBox1.Items.Clear();
 
-				foreach (String name in modFiles)
+				foreach (var name in modFiles)
 				{
-					if (SharpMikCommon.MatchesExtentions(name))
+					if (Helpers.MatchesExtensions(name))
 					{
 						m_FileList.Add(name);
-						String shortName = Path.GetFileNameWithoutExtension(name);
+						var shortName = Path.GetFileNameWithoutExtension(name);
 						listBox1.Items.Add(shortName + " (" + name + ")");
 					}
 				}
@@ -212,7 +186,6 @@ namespace SharpMilk
 
 				//m_Mod = m_Player.LoadModule(m_FileList[place]);
 
-
 				if (!Play())
 				{
 					Next();
@@ -235,17 +208,15 @@ namespace SharpMilk
 			}
 		}
 
-
-		private void Stop()
-		{
-			m_Player.Stop();
-		}
-
 		private bool Play()
 		{
+			if (m_FileList.Count == 0 || place < 0 || place >= m_FileList.Count)
+			{
+				return true;
+			}
 
 			m_Mod = m_Player.Play(m_FileList[place]);
-			toolStripLabel1.Text = m_Mod.songname;
+			tslCurrentlyPlaying.Text = m_Mod.SongName;
 			/*
 			try
 			{
@@ -257,21 +228,26 @@ namespace SharpMilk
 				return false;
 			}
 			
-			toolStripLabel1.Text = m_Mod.songname;
+			toolStripLabel1.Text = m_Mod.SongName;
 
 			m_Player.Play(m_Mod);
 			 * */
 			return true;
 		}
 
-		private void toolStripButton3_Click(object sender, EventArgs e)
+		void ExitApp()
 		{
-			Next();
+			ModPlayer.Player_Stop();
+			ModDriver.MikMod_Exit();
 		}
 
-		private void toolStripButton2_Click(object sender, EventArgs e)
-		{
+		private void tsbNext_Click(object sender, EventArgs e)
+			=> Next();
 
-		}
+		private void tsbPrevious_Click(object sender, EventArgs e)
+			=> Prev();
+
+		private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+			=> ExitApp();
 	}
 }

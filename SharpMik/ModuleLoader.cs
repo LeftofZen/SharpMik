@@ -2,11 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
-
 using SharpMik.Interfaces;
 using System.Reflection;
 using SharpMik.IO;
 using SharpMik.Player;
+using SharpMik.Common;
+using Module = SharpMik.Common.Module;
 
 namespace SharpMik
 {
@@ -19,51 +20,43 @@ namespace SharpMik
 	 */
 	public class ModuleLoader
 	{
+
 		#region private static variables
-		static bool s_UseBuiltInModuleLoaders = true;
-		static List<Type> s_RegistedModuleLoader = new List<Type>();
-		static bool s_HasAutoRegisted = false;
+		static readonly List<Type> s_RegistedModuleLoader = new();
+		static bool s_HasAutoRegisted;
 		#endregion
 
 		#region static accessors
-		static public bool UseBuiltInModuleLoaders
-		{
-			get { return s_UseBuiltInModuleLoaders; }
-			set { s_UseBuiltInModuleLoaders = value; }
-		}
+		static public bool UseBuiltInModuleLoaders { get; set; } = true;
 		#endregion
 
 		#region loader registration
 		static public void BuildRegisteredModules()
 		{
-			if (!s_HasAutoRegisted && s_UseBuiltInModuleLoaders)
+			if (!s_HasAutoRegisted && UseBuiltInModuleLoaders)
 			{
-				var list = Assembly.GetExecutingAssembly().GetTypes().Where( x => x.IsSubclassOf(typeof(IModLoader)));
+				var list = Assembly.GetExecutingAssembly().GetTypes().Where(x => x.IsSubclassOf(typeof(IModLoader)));
 
 				foreach (var type in list)
 				{
 					s_RegistedModuleLoader.Add(type);
 				}
-				
+
 				s_HasAutoRegisted = false;
 			}
 		}
 
-		public void RegisterModuleLoader<T>() where T: IModLoader
-		{
-			s_RegistedModuleLoader.Add(typeof(T));
-		}
+		public static void RegisterModuleLoader<T>() where T : IModLoader => s_RegistedModuleLoader.Add(typeof(T));
 		#endregion
 
-
 		#region Module Loading
-		public static Module Load(String fileName)
+		public static Module Load(string fileName)
 		{
 			//try
 			{
-				using (Stream stream = new FileStream(fileName, FileMode.Open,FileAccess.Read))
+				using (Stream stream = new FileStream(fileName, FileMode.Open, FileAccess.Read))
 				{
-					return Load(stream,64,0);
+					return Load(stream, 64, 0);
 				}
 			}
 			//catch (System.Exception ex)
@@ -77,13 +70,13 @@ namespace SharpMik
 			BuildRegisteredModules();
 			Module mod = null;
 
-			ModuleReader modReader = new ModuleReader(stream);
+			var modReader = new ModuleReader(stream);
 			IModLoader loader = null;
 
-			for (int i = 0; i < s_RegistedModuleLoader.Count; i++)
+			for (var i = 0; i < s_RegistedModuleLoader.Count; i++)
 			{
 				modReader.Rewind();
-				IModLoader tester = (IModLoader)Activator.CreateInstance(s_RegistedModuleLoader[i]);
+				var tester = (IModLoader)Activator.CreateInstance(s_RegistedModuleLoader[i]);
 				tester.ModuleReader = modReader;
 
 				if (tester.Test())
@@ -96,28 +89,26 @@ namespace SharpMik
 				tester.Cleanup();
 			}
 
-
 			if (loader != null)
 			{
 
-
-				int t = 0;
+				var t = 0;
 				mod = new Module();
 				loader.Module = mod;
 
-				bool loaded = false;
+				var loaded = false;
 
-				munitrk track = new munitrk();
+				var track = new InternalModuleFormat();
 				track.UniInit();
 				loader.Tracker = track;
 
-				mod.bpmlimit = 33;
-				mod.initvolume = 128;
-					
-				for (t = 0; t < SharpMikCommon.UF_MAXCHAN; t++)
+				mod.BpmLimit = 33;
+				mod.InitialVolume = 128;
+
+				for (t = 0; t < Constants.UF_MAXCHAN; t++)
 				{
-					mod.chanvol[t] = 64;
-					mod.panning[t] = (ushort)((((t + 1) & 2) == 2) ? SharpMikCommon.PAN_RIGHT : SharpMikCommon.PAN_LEFT);
+					mod.ChannelVolume[t] = 64;
+					mod.Panning[t] = (ushort)((((t + 1) & 2) == 2) ? Constants.PAN_RIGHT : Constants.PAN_LEFT);
 				}
 
 				if (loader.Init())
@@ -128,48 +119,48 @@ namespace SharpMik
 
 					if (loaded)
 					{
-						for (t = 0; t < mod.numsmp; t++)
+						for (t = 0; t < mod.NumSamples; t++)
 						{
-							if (mod.samples[t].inflags == 0)
+							if (mod.Samples[t].inflags == 0)
 							{
-								mod.samples[t].inflags = mod.samples[t].flags;
+								mod.Samples[t].inflags = mod.Samples[t].flags;
 							}
 						}
 					}
 				}
 
 				loader.Cleanup();
-				track.UniCleanup();				
+				track.UniCleanup();
 
 				if (loaded)
 				{
 					ML_LoadSamples(mod, modReader);
 
-					if (!((mod.flags & SharpMikCommon.UF_PANNING) == SharpMikCommon.UF_PANNING))
+					if ((mod.Flags & Constants.UF_PANNING) != Constants.UF_PANNING)
 					{
-						for (t = 0; t < mod.numchn; t++)
+						for (t = 0; t < mod.NumChannels; t++)
 						{
-							mod.panning[t] = (ushort)((((t + 1) & 2) == 2)  ? SharpMikCommon.PAN_HALFRIGHT : SharpMikCommon.PAN_HALFLEFT);
+							mod.Panning[t] = (ushort)((((t + 1) & 2) == 2) ? Constants.PAN_HALFRIGHT : Constants.PAN_HALFLEFT);
 						}
 					}
 
 					if (maxchan > 0)
 					{
-						if (!((mod.flags & SharpMikCommon.UF_NNA) == SharpMikCommon.UF_NNA) && (mod.numchn < maxchan))
+						if ((mod.Flags & Constants.UF_NNA) != Constants.UF_NNA && (mod.NumChannels < maxchan))
 						{
-							maxchan = mod.numchn;
+							maxchan = mod.NumChannels;
 						}
 						else
 						{
-							if ((mod.numvoices != 0) && (mod.numvoices < maxchan))
+							if ((mod.NumVoices != 0) && (mod.NumVoices < maxchan))
 							{
-								maxchan = mod.numvoices;
+								maxchan = mod.NumVoices;
 							}
 						}
 
-						if (maxchan < mod.numchn)
+						if (maxchan < mod.NumChannels)
 						{
-							mod.flags |= SharpMikCommon.UF_NNA;
+							mod.Flags |= Constants.UF_NNA;
 						}
 
 						if (ModDriver.MikMod_SetNumVoices_internal(maxchan, -1))
@@ -178,8 +169,6 @@ namespace SharpMik
 							return null;
 						}
 					}
-
-
 
 					SampleLoader.SL_LoadSamples();
 
@@ -199,7 +188,6 @@ namespace SharpMik
 			return mod;
 		}
 
-
 		private static void LoadFailed(IModLoader loader, Exception ex)
 		{
 			if (loader != null)
@@ -214,26 +202,23 @@ namespace SharpMik
 		}
 		#endregion
 
-
 		#region Common Load Implementation
 		private static bool ML_LoadSamples(Module of, ModuleReader modreader)
 		{
 			int u;
 
-			for (u = 0; u < of.numsmp;u++ )
+			for (u = 0; u < of.NumSamples; u++)
 			{
-				if (of.samples[u].length != 0)
+				if (of.Samples[u].length != 0)
 				{
-					SampleLoader.SL_RegisterSample(of.samples[u], (int)SharpMikCommon.MDTypes.MD_MUSIC, modreader);
+					SampleLoader.SL_RegisterSample(of.Samples[u], (int)MDTypes.MD_MUSIC, modreader);
 				}
 			}
 
 			return true;
 		}
 
-
 		#endregion
-
 
 		#region Module unloading
 		public static void UnLoad(Module mod)
@@ -244,16 +229,13 @@ namespace SharpMik
 
 		static void ML_FreeEx(Module mf)
 		{
-			if (mf.samples != null)
+			if (mf.Samples != null)
 			{
-				for (ushort t = 0; t < mf.numsmp; t++)
+				for (ushort t = 0; t < mf.NumSamples; t++)
 				{
-					if (mf.samples[t].length != 0)
+					if (mf.Samples[t].length != 0)
 					{
-						if (ModDriver.Driver != null)
-						{
-							ModDriver.Driver.SampleUnload(mf.samples[t].handle);
-						}						
+						ModDriver.Driver?.SampleUnload(mf.Samples[t].handle);
 					}
 				}
 			}

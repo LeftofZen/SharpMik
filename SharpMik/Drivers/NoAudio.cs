@@ -1,9 +1,9 @@
 ﻿namespace SharpMik.Drivers
 {
 	public class NoAudio : VirtualSoftwareDriver
-    {
-		uint BUFFERSIZE = 32768;
-		sbyte[] m_buffer;
+	{
+		readonly uint BUFFERSIZE = 32768;
+		readonly sbyte[] m_buffer;
 		public NoAudio()
 		{
 			m_Next = null;
@@ -17,27 +17,18 @@
 
 		public override void CommandLine(string command)
 		{
-		
+
 		}
 
-		public override bool IsPresent()
-		{
-			return true;
-		}
+		public override bool IsPresent() => true;
 
-		public override bool Init()
-		{
-			return base.Init();
-		}
+		public override bool Init() => base.Init();
 
-		public override void Exit()
-		{
-			base.Exit();
-		}
+		public override void Exit() => base.Exit();
 
 		public override void Update()
 		{
-			uint done = WriteBytes(m_buffer, BUFFERSIZE);
+			var done = WriteBytes(m_buffer, BUFFERSIZE);
 		}
 	}
 }

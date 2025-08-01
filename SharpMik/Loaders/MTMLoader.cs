@@ -2,55 +2,54 @@
 
 using SharpMik.Interfaces;
 using SharpMik.Attributes;
+using SharpMik.Common;
 
 namespace SharpMik.Loaders
 {
-    [ModFileExtentions(".mtm")]
-    public class MTMLoader : IModLoader
+	[ModFileExtentions(".mtm")]
+	public class MTMLoader : IModLoader
 	{
 		/*========== Module structure */
 
-		class MTMHEADER 
+		class MTMHEADER
 		{
-			public String id;			/* MTM file marker */
-			public byte version;			/* upper major, lower nibble minor version number */
-			public String  songname;		/* ASCIIZ songname */
-			public ushort numtracks;		/* number of tracks saved */
-			public byte lastpattern;		/* last pattern number saved */
-			public byte lastorder;		/* last order number to play (songlength-1) */
-			public ushort commentsize;		/* length of comment field */
-			public byte numsamples;		/* number of samples saved  */
-			public byte attribute;		/* attribute byte (unused) */
+			public string id;           /* MTM file marker */
+			public byte version;            /* upper major, lower nibble minor version number */
+			public string SongName;     /* ASCIIZ SongName */
+			public ushort numtracks;        /* number of tracks saved */
+			public byte lastpattern;        /* last pattern number saved */
+			public byte lastorder;      /* last order number to play (songlength-1) */
+			public ushort commentsize;      /* length of comment field */
+			public byte numsamples;     /* number of samples saved  */
+			public byte attribute;      /* attribute byte (unused) */
 			public byte beatspertrack;
-			public byte numchannels;		/* number of channels used  */
-			public byte[] panpos = new byte[32];		/* voice pan positions */
-		};
+			public byte numchannels;        /* number of channels used  */
+			public byte[] panpos = new byte[32];        /* voice pan positions */
+		}
 
-		class MTMSAMPLE 
+		class MTMSAMPLE
 		{
-			public String  samplename;
+			public string samplename;
 			public uint length;
 			public uint reppos;
 			public uint repend;
 			public byte finetune;
 			public byte volume;
 			public byte attribute;
-		};
+		}
 
-		class MTMNOTE 
+		class MTMNOTE
 		{
-			public byte a,b,c;
-		};
-
+			public byte a, b, c;
+		}
 
 		/*========== Loader variables */
 
-		MTMHEADER mh = null;
-		MTMNOTE []mtmtrk = null;
-		ushort[] pat = new ushort[32];
+		MTMHEADER mh;
+		MTMNOTE[] mtmtrk;
+		readonly ushort[] pat = new ushort[32];
 
-		String MTM_Version = "MTM";
-
+		readonly string MTM_Version = "MTM";
 
 		public MTMLoader()
 			: base()
@@ -59,31 +58,24 @@ namespace SharpMik.Loaders
 			m_ModuleVersion = "MTM (MultiTracker Module editor)";
 		}
 
-
-
-
-
 		public override bool Test()
 		{
-			String id;
-
-			id = m_Reader.Read_String(3);
+			var id = m_Reader.Read_String(3);
 
 			return id == "MTM";
 		}
-
 
 		public override bool Init()
 		{
 			mh = new MTMHEADER();
 			mtmtrk = new MTMNOTE[64];
 
-			for (int i = 0; i < mtmtrk.Length; i++)
+			for (var i = 0; i < mtmtrk.Length; i++)
 			{
 				mtmtrk[i] = new MTMNOTE();
 			}
 
-				return true;
+			return true;
 		}
 
 		public override void Cleanup()
@@ -95,130 +87,151 @@ namespace SharpMik.Loaders
 		byte[] MTM_Convert()
 		{
 			int t;
-			byte a,b,inst,note,eff,dat;
+			byte a, b, inst, note, eff, dat;
 
 			UniReset();
-			for(t=0;t<64;t++) 
+			for (t = 0; t < 64; t++)
 			{
-				a=mtmtrk[t].a;
-				b=mtmtrk[t].b;
-				inst=(byte)(((a&0x3)<<4)|(b>>4));
-				note=(byte)(a>>2);
-				eff=(byte)(b&0xf);
-				dat=mtmtrk[t].c;
+				a = mtmtrk[t].a;
+				b = mtmtrk[t].b;
+				inst = (byte)(((a & 0x3) << 4) | (b >> 4));
+				note = (byte)(a >> 2);
+				eff = (byte)(b & 0xf);
+				dat = mtmtrk[t].c;
 
-				if(inst != 0) 
-					UniInstrument(inst-1);
-				if(note != 0) 
-					UniNote(note+2*SharpMikCommon.Octave);
+				if (inst != 0)
+				{
+					UniInstrument(inst - 1);
+				}
+
+				if (note != 0)
+				{
+					UniNote(note + (2 * Constants.Octave));
+				}
 
 				/* MTM bug workaround : when the effect is volslide, slide-up *always*
 				   overrides slide-down. */
-				if(eff==0xa && (dat&0xf0) != 0) 
-					dat&=0xf0;
+				if (eff == 0xa && (dat & 0xf0) != 0)
+				{
+					dat &= 0xf0;
+				}
 
 				/* Convert pattern jump from Dec to Hex */
-				if(eff==0xd)
-					dat=(byte)((((dat&0xf0)>>4)*10)+(dat&0xf));
-				UniPTEffect(eff,dat);
+				if (eff == 0xd)
+				{
+					dat = (byte)((((dat & 0xf0) >> 4) * 10) + (dat & 0xf));
+				}
+
+				UniPTEffect(eff, dat);
 				UniNewline();
 			}
+
 			return UniDup();
 		}
 
-
-
 		public override bool Load(int curious)
 		{
-			int t,u;
+			int t, u;
 			MTMSAMPLE s;
-			SAMPLE q;
+			Sample q;
 
 			/* try to read module header  */
 			mh.id = m_Reader.Read_String(3);
-			mh.version     =m_Reader.Read_byte();
+			mh.version = m_Reader.Read_byte();
 
-			mh.songname = m_Reader.Read_String(20);
-			mh.numtracks   =m_Reader.Read_Intel_ushort();
-			mh.lastpattern =m_Reader.Read_byte();
-			mh.lastorder   =m_Reader.Read_byte();
-			mh.commentsize =m_Reader.Read_Intel_ushort();
-			mh.numsamples  =m_Reader.Read_byte();
-			mh.attribute   =m_Reader.Read_byte();
-			mh.beatspertrack=m_Reader.Read_byte();
-			mh.numchannels =m_Reader.Read_byte();
+			mh.SongName = m_Reader.Read_String(20);
+			mh.numtracks = m_Reader.Read_Intel_ushort();
+			mh.lastpattern = m_Reader.Read_byte();
+			mh.lastorder = m_Reader.Read_byte();
+			mh.commentsize = m_Reader.Read_Intel_ushort();
+			mh.numsamples = m_Reader.Read_byte();
+			mh.attribute = m_Reader.Read_byte();
+			mh.beatspertrack = m_Reader.Read_byte();
+			mh.numchannels = m_Reader.Read_byte();
 			m_Reader.Read_bytes(mh.panpos, 32);
 
-			if(m_Reader.isEOF()) {
+			if (m_Reader.isEOF())
+			{
 				m_LoadError = MMERR_LOADING_HEADER;
 				return false;
 			}
 
 			/* set module variables */
-			m_Module.initspeed = 6;
-			m_Module.inittempo = 125;
-			m_Module.modtype   = MTM_Version;
-			m_Module.numchn    = mh.numchannels;
-			m_Module.numtrk    = (ushort)(mh.numtracks+1);           /* get number of channels */
-			m_Module.songname  = mh.songname; /* make a cstr of songname */
-			m_Module.numpos    = (ushort)(mh.lastorder+1);           /* copy the songlength */
-			m_Module.numpat    = (ushort)(mh.lastpattern+1);
-			m_Module.reppos    = 0;
-			m_Module.flags    |= SharpMikCommon.UF_PANNING;
-			for(t=0;t<32;t++) 
-				m_Module.panning[t]=(ushort)(mh.panpos[t]<< 4);
-			
-			m_Module.numins=m_Module.numsmp=mh.numsamples;
+			m_Module.InitialSpeed = 6;
+			m_Module.InitialTempo = 125;
+			m_Module.ModType = MTM_Version;
+			m_Module.NumChannels = mh.numchannels;
+			m_Module.NumTracks = (ushort)(mh.numtracks + 1);           /* get number of channels */
+			m_Module.SongName = mh.SongName; /* make a cstr of SongName */
+			m_Module.NumPositions = (ushort)(mh.lastorder + 1);           /* copy the songlength */
+			m_Module.NumPatterns = (ushort)(mh.lastpattern + 1);
+			m_Module.RestartPosition = 0;
+			m_Module.Flags |= Constants.UF_PANNING;
+			for (t = 0; t < 32; t++)
+			{
+				m_Module.Panning[t] = (ushort)(mh.panpos[t] << 4);
+			}
+
+			m_Module.NumInstruments = m_Module.NumSamples = mh.numsamples;
 
 			m_Module.AllocSamples();
 
-			for(t=0;t<m_Module.numins;t++) 
+			for (t = 0; t < m_Module.NumInstruments; t++)
 			{
 				s = new MTMSAMPLE();
 
-				q = m_Module.samples[t];
+				q = m_Module.Samples[t];
 				/* try to read sample info */
 				s.samplename = m_Reader.Read_String(22);
-				s.length    =m_Reader.Read_Intel_uint();
+				s.length = m_Reader.Read_Intel_uint();
 				s.reppos = m_Reader.Read_Intel_uint();
 				s.repend = m_Reader.Read_Intel_uint();
-				s.finetune  =m_Reader.Read_byte();
-				s.volume    =m_Reader.Read_byte();
-				s.attribute =m_Reader.Read_byte();
+				s.finetune = m_Reader.Read_byte();
+				s.volume = m_Reader.Read_byte();
+				s.attribute = m_Reader.Read_byte();
 
-				if (m_Reader.isEOF()) 
+				if (m_Reader.isEOF())
 				{
-					m_LoadError = MMERR_LOADING_SAMPLEINFO; 
+					m_LoadError = MMERR_LOADING_SAMPLEINFO;
 					return false;
 				}
 
 				q.samplename = s.samplename;
-				q.seekpos   = 0;
-				q.speed		= SharpMikCommon.finetune[s.finetune];
-				q.length    = s.length;
+				q.seekpos = 0;
+				q.speed = Constants.finetune[s.finetune];
+				q.length = s.length;
 				q.loopstart = s.reppos;
-				q.loopend   = s.repend;
-				q.volume    = s.volume;
-				if((s.repend-s.reppos)>2) q.flags |= SharpMikCommon.SF_LOOP;
+				q.loopend = s.repend;
+				q.volume = s.volume;
+				if ((s.repend - s.reppos) > 2)
+				{
+					q.flags |= Constants.SF_LOOP;
+				}
 
-				if((s.attribute&1) != 0)
+				if ((s.attribute & 1) != 0)
 				{
 					/* If the sample is 16-bits, convert the length and replen
 					   byte-values into sample-values */
-					q.flags|=SharpMikCommon.SF_16BITS;
-					q.length>>=1;
-					q.loopstart>>=1;
-					q.loopend>>=1;
+					q.flags |= Constants.SF_16BITS;
+					q.length >>= 1;
+					q.loopstart >>= 1;
+					q.loopend >>= 1;
 				}
 			}
 
-			m_Module.positions = new ushort[m_Module.numpos];
+			m_Module.Positions = new ushort[m_Module.NumPositions];
 
-			for(t=0;t<m_Module.numpos;t++)
-				m_Module.positions[t]=m_Reader.Read_byte();
-			for(;t<128;t++) m_Reader.Read_byte();
+			for (t = 0; t < m_Module.NumPositions; t++)
+			{
+				m_Module.Positions[t] = m_Reader.Read_byte();
+			}
 
-			if(m_Reader.isEOF()) 
+			for (; t < 128; t++)
+			{
+				m_Reader.Read_byte();
+			}
+
+			if (m_Reader.isEOF())
 			{
 				m_LoadError = MMERR_LOADING_HEADER;
 				return false;
@@ -227,14 +240,14 @@ namespace SharpMik.Loaders
 			m_Module.AllocTracks();
 			m_Module.AllocPatterns();
 
-			m_Module.tracks[0]=MTM_Convert();		/* track 0 is empty */
-			for(t=1;t<m_Module.numtrk;t++) 
+			m_Module.Tracks[0] = MTM_Convert();     /* track 0 is empty */
+			for (t = 1; t < m_Module.NumTracks; t++)
 			{
-				for(int i=0;i<64;i++) 
+				for (var i = 0; i < 64; i++)
 				{
-					mtmtrk[i].a=m_Reader.Read_byte();
-					mtmtrk[i].b=m_Reader.Read_byte();
-					mtmtrk[i].c=m_Reader.Read_byte();
+					mtmtrk[i].a = m_Reader.Read_byte();
+					mtmtrk[i].b = m_Reader.Read_byte();
+					mtmtrk[i].c = m_Reader.Read_byte();
 				}
 
 				if (m_Reader.isEOF())
@@ -243,32 +256,33 @@ namespace SharpMik.Loaders
 					return false;
 				}
 
-				if((m_Module.tracks[t]=MTM_Convert()) == null)
+				if ((m_Module.Tracks[t] = MTM_Convert()) == null)
+				{
 					return false;
+				}
 			}
 
-			for(t=0;t<m_Module.numpat;t++) 
+			for (t = 0; t < m_Module.NumPatterns; t++)
 			{
 				m_Reader.Read_Intel_ushorts(pat, 32);
-				for(u=0;u<m_Module.numchn;u++)
-					m_Module.patterns[((long)t*m_Module.numchn)+u]=pat[u];
+				for (u = 0; u < m_Module.NumChannels; u++)
+				{
+					m_Module.Patterns[((long)t * m_Module.NumChannels) + u] = pat[u];
+				}
 			}
 
 			/* read comment field */
 			if (mh.commentsize != 0)
 			{
 				if (!ReadLinedComment(mh.commentsize, 40))
+				{
 					return false;
+				}
 			}
 
 			return true;
 		}
 
-
-
-		public override string LoadTitle()
-		{
-			throw new NotImplementedException();
-		}
+		public override string LoadTitle() => throw new NotImplementedException();
 	}
 }

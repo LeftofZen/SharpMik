@@ -2,24 +2,23 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Xml.Serialization;
-using System.Reflection;
 
 namespace MikModUnitTest
 {
-	public class UnitTestHelpers
+	public static class UnitTestHelpers
 	{
 
 		public static void FindRepeats()
 		{
-			Dictionary<String, int> repeatTest = new Dictionary<String, int>();
+			var repeatTest = new Dictionary<string, int>();
 
-			foreach (Assembly ass in AppDomain.CurrentDomain.GetAssemblies())
+			foreach (var ass in AppDomain.CurrentDomain.GetAssemblies())
 			{
 				if (!ass.GlobalAssemblyCache)
 				{
-					Type[] types = ass.GetTypes();
+					var types = ass.GetTypes();
 
-					foreach (Type type in types)
+					foreach (var type in types)
 					{
 						if (repeatTest.ContainsKey(type.Name))
 						{
@@ -34,17 +33,18 @@ namespace MikModUnitTest
 			}
 
 			Console.WriteLine("----");
-			foreach (String key in repeatTest.Keys)
+			foreach (var key in repeatTest.Keys)
 			{
 				if (repeatTest[key] > 1)
 				{
 					Console.WriteLine(key);
 				}
 			}
+
 			Console.WriteLine("----");
 		}
 
-		public static bool ReadXML<T>(String fileName, ref T obj)
+		public static bool ReadXML<T>(string fileName, ref T obj)
 		{
 			FileStream xmlStream = null;
 
@@ -52,7 +52,7 @@ namespace MikModUnitTest
 			{
 				try
 				{
-					XmlSerializer xmlSer = new XmlSerializer(typeof(T));
+					var xmlSer = new XmlSerializer(typeof(T));
 
 					xmlStream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.None);
 					obj = (T)xmlSer.Deserialize(xmlStream);
@@ -65,8 +65,7 @@ namespace MikModUnitTest
 				}
 				finally
 				{
-					if (xmlStream != null)
-						xmlStream.Close();
+					xmlStream?.Close();
 				}
 			}
 
@@ -79,7 +78,7 @@ namespace MikModUnitTest
 
 			try
 			{
-				XmlSerializer xmlSer = new XmlSerializer(typeof(T));
+				var xmlSer = new XmlSerializer(typeof(T));
 
 				xmlStream = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None);
 				xmlSer.Serialize(xmlStream, obj);
@@ -92,8 +91,7 @@ namespace MikModUnitTest
 			}
 			finally
 			{
-				if (xmlStream != null)
-					xmlStream.Close();
+				xmlStream?.Close();
 			}
 		}
 	}

@@ -1,4 +1,5 @@
 ﻿using System;
+using SharpMik.Common;
 using SharpMik.Interfaces;
 
 namespace SharpMik.Player
@@ -17,43 +18,31 @@ namespace SharpMik.Player
 		#region private (static) variables
 		private static IModDriver m_Driver;
 
-		static ushort md_mode = SharpMikCommon.DMODE_STEREO | SharpMikCommon.DMODE_16BITS |
-						SharpMikCommon.DMODE_SURROUND | SharpMikCommon.DMODE_SOFT_MUSIC |
-						SharpMikCommon.DMODE_SOFT_SNDFX;
+		internal static byte md_numchn;
+		internal static byte md_sngchn;
+		internal static byte md_sfxchn;
 
-
-        internal static byte md_numchn = 0;
-        internal static byte md_sngchn = 0;
-        internal static byte md_sfxchn = 0;
-
-        static byte md_hardchn = 0;
-        static byte md_softchn = 0;
-		static ushort md_mixfreq = 44100;
+		static byte md_hardchn;
+		static byte md_softchn;
 		static ushort md_bpm = 125;
-		static byte md_reverb = 0;
 		static byte[] sfxinfo;
 
-		static byte md_pansep         = 128;	/* 128 == 100% (full left/right) */
-		static byte md_volume         = 128;	/* global sound volume (0-128) */
-		static byte md_musicvolume    = 128;	/* volume of song */
-		static byte md_sndfxvolume = 128;	/* volume of sound effects */
+		static byte md_pansep = 128;    /* 128 == 100% (full left/right) */
+		static byte md_volume = 128;    /* global sound volume (0-128) */
+		static byte md_musicvolume = 128;   /* volume of song */
+		static byte md_sndfxvolume = 128;   /* volume of sound effects */
 
-		static SAMPLE[] md_sample;
+		static Sample[] md_sample;
 		#endregion
-        
 
 		#region Accessors
 		public static byte PanSeperation
 		{
 			get { return md_pansep; }
-			set { md_pansep = value < 129 ? value: (byte)128; }
+			set { md_pansep = value < 129 ? value : (byte)128; }
 		}
 
-		public static byte SoftwareChannel
-		{
-			get { return md_softchn; }
-		}
-
+		public static byte SoftwareChannel => md_softchn;
 
 		public static int ChannelCount
 		{
@@ -61,28 +50,18 @@ namespace SharpMik.Player
 			set { md_numchn = (byte)value; }
 		}
 
-		public static ushort Mode
-		{
-			get { return md_mode; }
-			set { md_mode = value; }
-		}
+		public static ushort Mode { get; set; } = Constants.DMODE_STEREO | Constants.DMODE_16BITS |
+						Constants.DMODE_SURROUND | Constants.DMODE_SOFT_MUSIC |
+						Constants.DMODE_SOFT_SNDFX;
 
-		public static ushort MixFrequency
-		{
-			get { return md_mixfreq; }
-			set { md_mixfreq = value; }
-		}
+		public static ushort MixFrequency { get; set; } = 44100;
 		public static ushort Bpm
 		{
 			get { return md_bpm; }
 			set { md_bpm = value; }
 		}
 
-		public static byte Reverb
-		{
-			get { return md_reverb; }
-			set { md_reverb = value; }
-		}
+		public static byte Reverb { get; set; }
 
 		public static byte SoundFXChannel
 		{
@@ -102,15 +81,9 @@ namespace SharpMik.Player
 			set { md_musicvolume = value < 129 ? value : (byte)128; }
 		}
 
-		public static IModDriver Driver
-		{
-			get { return m_Driver; }
-		}
-
-
+		public static IModDriver Driver => m_Driver;
 
 		#endregion
-
 
 		public static T LoadDriver<T>() where T : IModDriver, new()
 		{
@@ -118,20 +91,19 @@ namespace SharpMik.Player
 			return (T)m_Driver;
 		}
 
-
-		internal static short MD_SampleLoad(SAMPLOAD s, int type)
+		internal static short MD_SampleLoad(SampleLoad s, int type)
 		{
 			short result = -1;
 
 			if (m_Driver != null)
 			{
-				if (type == (int)SharpMikCommon.MDTypes.MD_MUSIC)
+				if (type == (int)MDTypes.MD_MUSIC)
 				{
-					type = (int)((md_mode & SharpMikCommon.DMODE_SOFT_MUSIC) == SharpMikCommon.DMODE_SOFT_MUSIC ? SharpMikCommon.MDDecodeTypes.MD_SOFTWARE : SharpMikCommon.MDDecodeTypes.MD_HARDWARE);
+					type = (int)((Mode & Constants.DMODE_SOFT_MUSIC) == Constants.DMODE_SOFT_MUSIC ? MDDecodeTypes.MD_SOFTWARE : MDDecodeTypes.MD_HARDWARE);
 				}
-				else if (type == (int)SharpMikCommon.MDTypes.MD_SNDFX)
+				else if (type == (int)MDTypes.MD_SNDFX)
 				{
-					type = (int)((md_mode & SharpMikCommon.DMODE_SOFT_SNDFX) == SharpMikCommon.DMODE_SOFT_SNDFX ? SharpMikCommon.MDDecodeTypes.MD_SOFTWARE : SharpMikCommon.MDDecodeTypes.MD_HARDWARE);
+					type = (int)((Mode & Constants.DMODE_SOFT_SNDFX) == Constants.DMODE_SOFT_SNDFX ? MDDecodeTypes.MD_SOFTWARE : MDDecodeTypes.MD_HARDWARE);
 				}
 
 				SampleLoader.SL_Init(s);
@@ -162,55 +134,68 @@ namespace SharpMik.Player
 			return -1;
 		}
 
-
 		/* Note: 'type' indicates whether the returned value should be for music or for sound effects. */
 		public static uint MD_SampleSpace(int type)
 		{
-			if (type == (int)SharpMikCommon.MDTypes.MD_MUSIC)
-				type = (int)((md_mode & SharpMikCommon.DMODE_SOFT_MUSIC) != 0 ? SharpMikCommon.MDDecodeTypes.MD_SOFTWARE : SharpMikCommon.MDDecodeTypes.MD_HARDWARE);
-			else if (type == (int)SharpMikCommon.MDTypes.MD_SNDFX)
-				type = (int)((md_mode & SharpMikCommon.DMODE_SOFT_SNDFX) != 0 ? SharpMikCommon.MDDecodeTypes.MD_SOFTWARE : SharpMikCommon.MDDecodeTypes.MD_HARDWARE);
+			if (type == (int)MDTypes.MD_MUSIC)
+			{
+				type = (int)((Mode & Constants.DMODE_SOFT_MUSIC) != 0 ? MDDecodeTypes.MD_SOFTWARE : MDDecodeTypes.MD_HARDWARE);
+			}
+			else if (type == (int)MDTypes.MD_SNDFX)
+			{
+				type = (int)((Mode & Constants.DMODE_SOFT_SNDFX) != 0 ? MDDecodeTypes.MD_SOFTWARE : MDDecodeTypes.MD_HARDWARE);
+			}
 
 			return m_Driver.FreeSampleSpace(type);
 		}
 
-
 		public static void Voice_Stop_internal(byte voice)
 		{
-			if ((voice < 0) || (voice >= md_numchn)) return;
+			if ((voice < 0) || (voice >= md_numchn))
+			{
+				return;
+			}
+
 			if (voice >= md_sngchn)
 			{
 				/* It is a sound effects channel, so flag the voice as non-critical! */
 				sfxinfo[voice - md_sngchn] = 0;
 			}
+
 			m_Driver.VoiceStop(voice);
 		}
 
 		internal static bool Voice_Stopped_internal(sbyte voice)
 		{
-			if ((voice < 0) || (voice >= md_numchn)) 
+			if ((voice < 0) || (voice >= md_numchn))
+			{
 				return false;
+			}
 
-			return (m_Driver.VoiceStopped((byte)voice));
+			return m_Driver.VoiceStopped((byte)voice);
 		}
 
-
-		internal static void Voice_Play_internal(sbyte voice, SAMPLE s, uint start)
+		internal static void Voice_Play_internal(sbyte voice, Sample s, uint start)
 		{
 			uint repend;
 
-			if ((voice < 0) || (voice >= md_numchn)) return;
+			if ((voice < 0) || (voice >= md_numchn))
+			{
+				return;
+			}
 
 			md_sample[voice] = s;
 			repend = s.loopend;
 
-			if ((s.flags & SharpMikCommon.SF_LOOP) == SharpMikCommon.SF_LOOP)
+			if ((s.flags & Constants.SF_LOOP) == Constants.SF_LOOP)
 			{
 				/* repend can't be bigger than size */
-				if (repend > s.length) 
+				if (repend > s.length)
+				{
 					repend = s.length;
+				}
 			}
-			
+
 			m_Driver.VoicePlay((byte)voice, s.handle, start, s.length, s.loopstart, repend, s.flags);
 		}
 
@@ -218,61 +203,86 @@ namespace SharpMik.Player
 		{
 			uint tmp;
 
-			if ((voice < 0) || (voice >= md_numchn)) return;
+			if ((voice < 0) || (voice >= md_numchn))
+			{
+				return;
+			}
 
 			/* range checks */
-			if (md_musicvolume > 128) 
+			if (md_musicvolume > 128)
+			{
 				md_musicvolume = 128;
-			
-			if (md_sndfxvolume > 128) 
-				md_sndfxvolume = 128;
-			
-			if (md_volume > 128) 
-				md_volume = 128;
+			}
 
-			tmp =(uint)(vol * md_volume * ((voice < md_sngchn) ? md_musicvolume : md_sndfxvolume));
+			if (md_sndfxvolume > 128)
+			{
+				md_sndfxvolume = 128;
+			}
+
+			if (md_volume > 128)
+			{
+				md_volume = 128;
+			}
+
+			tmp = (uint)(vol * md_volume * ((voice < md_sngchn) ? md_musicvolume : md_sndfxvolume));
 			m_Driver.VoiceSetVolume((byte)voice, (ushort)(tmp / 16384));
 		}
 
 		internal static void Voice_SetPanning_internal(sbyte voice, uint pan)
 		{
-			if ((voice < 0) || (voice >= md_numchn)) 
-				return;
-			
-			if (pan != SharpMikCommon.PAN_SURROUND)
+			if ((voice < 0) || (voice >= md_numchn))
 			{
-				if (md_pansep > 128) md_pansep = 128;
-				if ((md_mode & SharpMikCommon.DMODE_REVERSE) == SharpMikCommon.DMODE_REVERSE)
-					pan = 255 - pan;
-				pan = (uint)((((short)(pan - 128) * md_pansep) / 128) + 128);
+				return;
 			}
+
+			if (pan != Constants.PAN_SURROUND)
+			{
+				if (md_pansep > 128)
+				{
+					md_pansep = 128;
+				}
+
+				if ((Mode & Constants.DMODE_REVERSE) == Constants.DMODE_REVERSE)
+				{
+					pan = 255 - pan;
+				}
+
+				pan = (uint)(((short)(pan - 128) * md_pansep / 128) + 128);
+			}
+
 			m_Driver.VoiceSetPanning((byte)voice, pan);
 		}
 
 		internal static void Voice_SetFrequency_internal(sbyte voice, uint frq)
 		{
-			if ((voice < 0) || (voice >= md_numchn)) 
+			if ((voice < 0) || (voice >= md_numchn))
+			{
 				return;
-			
+			}
+
 			if ((md_sample[voice] != null) && (md_sample[voice].divfactor != 0))
 			{
 				frq /= md_sample[voice].divfactor;
 			}
-			
+
 			m_Driver.VoiceSetFrequency((byte)voice, frq);
 		}
 
 		static void LimitHardVoices(int limit)
 		{
-			int t = 0;
+			var t = 0;
 
-			if (!((md_mode & SharpMikCommon.DMODE_SOFT_SNDFX) == SharpMikCommon.DMODE_SOFT_SNDFX) && (md_sfxchn > limit)) 
+			if ((Mode & Constants.DMODE_SOFT_SNDFX) != Constants.DMODE_SOFT_SNDFX && (md_sfxchn > limit))
+			{
 				md_sfxchn = (byte)limit;
+			}
 
-			if (!((md_mode & SharpMikCommon.DMODE_SOFT_MUSIC) == SharpMikCommon.DMODE_SOFT_MUSIC) && (md_sngchn > limit)) 
+			if ((Mode & Constants.DMODE_SOFT_MUSIC) != Constants.DMODE_SOFT_MUSIC && (md_sngchn > limit))
+			{
 				md_sngchn = (byte)limit;
+			}
 
-			if (!((md_mode & SharpMikCommon.DMODE_SOFT_SNDFX) == SharpMikCommon.DMODE_SOFT_SNDFX))
+			if ((Mode & Constants.DMODE_SOFT_SNDFX) != Constants.DMODE_SOFT_SNDFX)
 			{
 				md_hardchn = md_sfxchn;
 			}
@@ -281,7 +291,7 @@ namespace SharpMik.Player
 				md_hardchn = 0;
 			}
 
-			if (!((md_mode & SharpMikCommon.DMODE_SOFT_MUSIC) == SharpMikCommon.DMODE_SOFT_MUSIC))
+			if ((Mode & Constants.DMODE_SOFT_MUSIC) != Constants.DMODE_SOFT_MUSIC)
 			{
 				md_hardchn += md_sngchn;
 			}
@@ -290,20 +300,20 @@ namespace SharpMik.Player
 			{
 				if ((++t & 1) == 1)
 				{
-					if (!((md_mode & SharpMikCommon.DMODE_SOFT_SNDFX) == SharpMikCommon.DMODE_SOFT_SNDFX) && (md_sfxchn > 4))
+					if ((Mode & Constants.DMODE_SOFT_SNDFX) != Constants.DMODE_SOFT_SNDFX && (md_sfxchn > 4))
 					{
 						md_sfxchn--;
 					}
 				}
 				else
 				{
-					if (!((md_mode & SharpMikCommon.DMODE_SOFT_MUSIC) == SharpMikCommon.DMODE_SOFT_MUSIC) && (md_sngchn > 8))
+					if ((Mode & Constants.DMODE_SOFT_MUSIC) != Constants.DMODE_SOFT_MUSIC && (md_sngchn > 8))
 					{
 						md_sngchn--;
 					}
 				}
 
-				if (!((md_mode & SharpMikCommon.DMODE_SOFT_SNDFX) == SharpMikCommon.DMODE_SOFT_SNDFX))
+				if ((Mode & Constants.DMODE_SOFT_SNDFX) != Constants.DMODE_SOFT_SNDFX)
 				{
 					md_hardchn = md_sfxchn;
 				}
@@ -312,7 +322,7 @@ namespace SharpMik.Player
 					md_hardchn = 0;
 				}
 
-				if (!((md_mode & SharpMikCommon.DMODE_SOFT_MUSIC) == SharpMikCommon.DMODE_SOFT_MUSIC))
+				if ((Mode & Constants.DMODE_SOFT_MUSIC) != Constants.DMODE_SOFT_MUSIC)
 				{
 					md_hardchn += md_sngchn;
 				}
@@ -321,76 +331,81 @@ namespace SharpMik.Player
 			md_numchn = (byte)(md_hardchn + md_softchn);
 		}
 
-
-
-
 		static void LimitSoftVoices(int limit)
 		{
-			int t = 0;
+			var t = 0;
 
-			if ((md_mode & SharpMikCommon.DMODE_SOFT_SNDFX) == SharpMikCommon.DMODE_SOFT_SNDFX && (md_sfxchn > limit)) 
+			if ((Mode & Constants.DMODE_SOFT_SNDFX) == Constants.DMODE_SOFT_SNDFX && (md_sfxchn > limit))
+			{
 				md_sfxchn = (byte)limit;
+			}
 
-			if ((md_mode & SharpMikCommon.DMODE_SOFT_MUSIC) == SharpMikCommon.DMODE_SOFT_MUSIC && (md_sngchn > limit))
+			if ((Mode & Constants.DMODE_SOFT_MUSIC) == Constants.DMODE_SOFT_MUSIC && (md_sngchn > limit))
+			{
 				md_sngchn = (byte)limit;
+			}
 
-			if ((md_mode & SharpMikCommon.DMODE_SOFT_SNDFX) == SharpMikCommon.DMODE_SOFT_SNDFX)
+			if ((Mode & Constants.DMODE_SOFT_SNDFX) == Constants.DMODE_SOFT_SNDFX)
+			{
 				md_softchn = md_sfxchn;
+			}
 			else
+			{
 				md_softchn = 0;
+			}
 
-			if ((md_mode & SharpMikCommon.DMODE_SOFT_MUSIC) == SharpMikCommon.DMODE_SOFT_MUSIC)
+			if ((Mode & Constants.DMODE_SOFT_MUSIC) == Constants.DMODE_SOFT_MUSIC)
+			{
 				md_softchn += md_sngchn;
+			}
 
 			while (md_softchn > limit)
 			{
 				if ((++t & 1) == 1)
 				{
-					if (((md_mode & SharpMikCommon.DMODE_SOFT_SNDFX) == SharpMikCommon.DMODE_SOFT_SNDFX) && (md_sfxchn > 4)) 
+					if (((Mode & Constants.DMODE_SOFT_SNDFX) == Constants.DMODE_SOFT_SNDFX) && (md_sfxchn > 4))
+					{
 						md_sfxchn--;
+					}
 				}
 				else
 				{
-					if (((md_mode & SharpMikCommon.DMODE_SOFT_MUSIC) == SharpMikCommon.DMODE_SOFT_MUSIC) && (md_sngchn > 8)) 
+					if (((Mode & Constants.DMODE_SOFT_MUSIC) == Constants.DMODE_SOFT_MUSIC) && (md_sngchn > 8))
+					{
 						md_sngchn--;
+					}
 				}
 
-				if (!((md_mode & SharpMikCommon.DMODE_SOFT_SNDFX) == SharpMikCommon.DMODE_SOFT_SNDFX))
+				if ((Mode & Constants.DMODE_SOFT_SNDFX) != Constants.DMODE_SOFT_SNDFX)
+				{
 					md_softchn = md_sfxchn;
+				}
 				else
+				{
 					md_softchn = 0;
+				}
 
-				if (!((md_mode & SharpMikCommon.DMODE_SOFT_MUSIC) == SharpMikCommon.DMODE_SOFT_MUSIC))
+				if ((Mode & Constants.DMODE_SOFT_MUSIC) != Constants.DMODE_SOFT_MUSIC)
+				{
 					md_softchn += md_sngchn;
+				}
 			}
+
 			md_numchn = (byte)(md_hardchn + md_softchn);
 		}
 
-
-
-
-
-
-
 		// should be moved into own file..
 		#region milkmod stuff 
-		internal static bool isplaying = false;
-		static bool initialized = false;
+		internal static bool isplaying;
+		static bool initialized;
 
-		static bool MikMod_Active_internal()
-		{
-			return isplaying;
-		}
+		static bool MikMod_Active_internal() => isplaying;
 
-		public static bool MikMod_Active()
-		{
-			return MikMod_Active_internal();
-		}
-
+		public static bool MikMod_Active() => MikMod_Active_internal();
 
 		static bool MikMod_EnableOutput_internal()
 		{
-			if(!isplaying) 
+			if (!isplaying)
 			{
 				if (m_Driver.PlayStart())
 				{
@@ -403,24 +418,18 @@ namespace SharpMik.Player
 			return false;
 		}
 
-		public static bool MikMod_EnableOutput()
-		{
-			return MikMod_EnableOutput_internal();
-		}
-
-
+		public static bool MikMod_EnableOutput() => MikMod_EnableOutput_internal();
 
 		public static void MikMod_Update()
 		{
 			if (isplaying)
 			{
-				if (ModPlayer.s_Module != null || (!ModPlayer.s_Module.forbid))
+				if (ModPlayer.s_Module != null || (!ModPlayer.s_Module.Forbid))
 				{
 					m_Driver.Update();
 				}
 			}
 		}
-
 
 		public static void Driver_Pause(bool pause)
 		{
@@ -437,10 +446,9 @@ namespace SharpMik.Player
 			}
 		}
 
-
 		static internal void MikMod_DisableOutput_internal()
 		{
-			if(isplaying && m_Driver != null) 
+			if (isplaying && m_Driver != null)
 			{
 				isplaying = false;
 				m_Driver.PlayStop();
@@ -449,7 +457,7 @@ namespace SharpMik.Player
 
 		public static bool MikMod_SetNumVoices_internal(int music, int sfx)
 		{
-			bool resume = false;
+			var resume = false;
 			int t, oldchn = 0;
 
 			if ((music == 0) && (sfx == 0))
@@ -457,7 +465,6 @@ namespace SharpMik.Player
 				return true;
 			}
 
-			
 			if (isplaying)
 			{
 				MikMod_DisableOutput_internal();
@@ -499,10 +506,10 @@ namespace SharpMik.Player
 
 			if ((md_sngchn + md_sfxchn) != 0)
 			{
-				md_sample = new SAMPLE[md_sngchn + md_sfxchn];
-				for (int i = 0; i < md_sngchn + md_sfxchn; i++)
+				md_sample = new Sample[md_sngchn + md_sfxchn];
+				for (var i = 0; i < md_sngchn + md_sfxchn; i++)
 				{
-					md_sample[i] = new SAMPLE();
+					md_sample[i] = new Sample();
 				}
 			}
 
@@ -516,7 +523,7 @@ namespace SharpMik.Player
 			{
 				Voice_Stop_internal((byte)t);
 			}
-			
+
 			if (resume)
 			{
 				MikMod_EnableOutput_internal();
@@ -525,7 +532,6 @@ namespace SharpMik.Player
 			return false;
 		}
 
-
 		static void MikMod_Exit_internal()
 		{
 			MikMod_DisableOutput_internal();
@@ -533,19 +539,19 @@ namespace SharpMik.Player
 			md_numchn = md_sfxchn = md_sngchn = 0;
 
 			if (sfxinfo != null)
+			{
 				sfxinfo = null;
+			}
 
 			if (md_sample != null)
+			{
 				md_sample = null;
+			}
 
 			initialized = false;
 		}
 
-		public static void MikMod_Exit()
-		{	
-			MikMod_Exit_internal();
-		}
-
+		public static void MikMod_Exit() => MikMod_Exit_internal();
 
 		static bool _mm_init(string cmdline)
 		{
@@ -570,22 +576,18 @@ namespace SharpMik.Player
 			return false;
 		}
 
-		public static bool MikMod_Init(string cmdline)
-		{
-			return _mm_init(cmdline);
-		}
+		public static bool MikMod_Init(string cmdline) => _mm_init(cmdline);
 
-		public static bool MikMod_Reset(string cmdline)
-		{
-			return _mm_reset(cmdline);
-		}
+		public static bool MikMod_Reset(string cmdline) => _mm_reset(cmdline);
 
 		static bool _mm_reset(string cmdline)
 		{
-			bool wasplaying = false;
+			var wasplaying = false;
 
-			if (!initialized) 
+			if (!initialized)
+			{
 				return _mm_init(cmdline);
+			}
 
 			if (isplaying)
 			{
@@ -599,8 +601,11 @@ namespace SharpMik.Player
 				return true;
 			}
 
-			if (wasplaying) 
+			if (wasplaying)
+			{
 				m_Driver.PlayStart();
+			}
+
 			return false;
 		}
 

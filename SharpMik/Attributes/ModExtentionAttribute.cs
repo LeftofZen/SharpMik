@@ -2,14 +2,13 @@
 
 namespace SharpMik.Attributes
 {
-    public class ModFileExtentionsAttribute : Attribute
-    {
-        public String[] FileExtentions { get; }
+	public class ModFileExtentionsAttribute : Attribute
+	{
+		public string[] FileExtentions { get; }
 
-
-        public ModFileExtentionsAttribute(params String[] extentions)
-        {
-            FileExtentions = extentions;
-        }
-    }
+		public ModFileExtentionsAttribute(params string[] extentions)
+		{
+			FileExtentions = extentions;
+		}
+	}
 }

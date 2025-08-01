@@ -1,0 +1,20 @@
+﻿namespace SharpMik.Common
+{
+	public enum ExtentedEffects
+	{
+		SS_GLISSANDO = 1,
+		SS_FINETUNE,
+		SS_VIBWAVE,
+		SS_TREMWAVE,
+		SS_PANWAVE,
+		SS_FRAMEDELAY,
+		SS_S7EFFECTS,
+		SS_PANNING,
+		SS_SURROUND,
+		SS_HIOFFSET,
+		SS_PATLOOP,
+		SS_NOTECUT,
+		SS_NOTEDELAY,
+		SS_PATDELAY
+	}
+}

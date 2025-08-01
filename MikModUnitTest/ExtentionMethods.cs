@@ -22,11 +22,11 @@ namespace MikModUnitTest
 
 			if (@this.InvokeRequired)
 			{
-				@this.Invoke(new SetPropertyThreadSafeDelegate<TResult>(SetPropertyThreadSafe), new object[] { @this, property, value });
+				@this.Invoke(new SetPropertyThreadSafeDelegate<TResult>(SetPropertyThreadSafe), [@this, property, value]);
 			}
 			else
 			{
-				@this.GetType().InvokeMember(propertyInfo.Name, BindingFlags.SetProperty, null, @this, new object[] { value });
+				@this.GetType().InvokeMember(propertyInfo.Name, BindingFlags.SetProperty, null, @this, [value]);
 			}
 		}
 	}

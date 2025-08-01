@@ -1,31 +1,28 @@
 ﻿using System;
 using SharpMik.Interfaces;
 using System.IO;
+using SharpMik.Common;
 
 namespace SharpMik.Player
 {
 	public class MikMod
 	{
-		String m_Error;
-		String m_CommandLine;
+		string m_Error;
+		string m_CommandLine;
 
-		public event SharpMik.Player.ModPlayer.PlayerStateChangedEvent PlayerStateChangeEvent;
+		public event ModPlayer.PlayerStateChangedEvent PlayerStateChangeEvent;
 
-		public bool HasError
-		{
-			get { return !String.IsNullOrEmpty(m_Error); }
-		}
+		public bool HasError => !string.IsNullOrEmpty(m_Error);
 
-		public String ErrorMessage
+		public string ErrorMessage
 		{
 			get
 			{
-				String error = m_Error;
+				var error = m_Error;
 				m_Error = null;
 				return error;
 			}
 		}
-
 
 		public MikMod()
 		{
@@ -34,30 +31,25 @@ namespace SharpMik.Player
 
 		void ModPlayer_PlayStateChangedHandle(ModPlayer.PlayerState state)
 		{
-			if (PlayerStateChangeEvent != null)
-			{
-				PlayerStateChangeEvent(state);
-			}
+			PlayerStateChangeEvent?.Invoke(state);
 		}
 
-		public float GetProgress()
+		public static float GetProgress()
 		{
 			if (ModPlayer.mod != null)
 			{
-				float current = (ModPlayer.mod.sngpos * ModPlayer.mod.numrow) + ModPlayer.mod.patpos;
-				float total = ModPlayer.mod.numpos * ModPlayer.mod.numrow;
+				float current = (ModPlayer.mod.SongPosition * ModPlayer.mod.NumRowsOnCurrentPattern) + ModPlayer.mod.PatternRowNumber;
+				float total = ModPlayer.mod.NumPositions * ModPlayer.mod.NumRowsOnCurrentPattern;
 
 				return current / total;
 			}
+
 			return 0.0f;
 		}
 
-		public bool Init<T>() where T : IModDriver, new()
-		{
-			return Init<T>("");
-		}
+		public bool Init<T>() where T : IModDriver, new() => Init<T>("");
 
-		public bool Init<T>(String command) where T : IModDriver, new()
+		public bool Init<T>(string command) where T : IModDriver, new()
 		{
 			m_CommandLine = command;
 			ModDriver.LoadDriver<T>();
@@ -65,27 +57,21 @@ namespace SharpMik.Player
 			return ModDriver.MikMod_Init(command);
 		}
 
-		public T Init<T>(String command, out bool result) where T : IModDriver, new()
+		public T Init<T>(string command, out bool result) where T : IModDriver, new()
 		{
 			m_CommandLine = command;
-			T driver = ModDriver.LoadDriver<T>();
+			var driver = ModDriver.LoadDriver<T>();
 
 			result = ModDriver.MikMod_Init(command);
 
 			return driver;
 		}
 
-		public void Reset()
-		{
-			ModDriver.MikMod_Reset(m_CommandLine);
-		}
+		public void Reset() => ModDriver.MikMod_Reset(m_CommandLine);
 
-		public void Exit()
-		{
-			ModDriver.MikMod_Exit();
-		}
+		public static void Exit() => ModDriver.MikMod_Exit();
 
-		public Module LoadModule(String fileName)
+		public Module LoadModule(string fileName)
 		{
 			m_Error = null;
 			if (ModDriver.Driver != null)
@@ -94,10 +80,10 @@ namespace SharpMik.Player
 				{
 					return ModuleLoader.Load(fileName);
 				}
-				catch (System.Exception ex)
+				catch (Exception ex)
 				{
 					m_Error = ex.Message;
-				}				
+				}
 			}
 			else
 			{
@@ -114,9 +100,9 @@ namespace SharpMik.Player
 			{
 				try
 				{
-					return ModuleLoader.Load(stream,128,0);
+					return ModuleLoader.Load(stream, 128, 0);
 				}
-				catch (System.Exception ex)
+				catch (Exception ex)
 				{
 					m_Error = ex.Message;
 				}
@@ -136,7 +122,7 @@ namespace SharpMik.Player
 			ModuleLoader.UnLoad(mod);
 		}
 
-		public void UnLoadCurrent()
+		public static void UnLoadCurrent()
 		{
 			if (ModPlayer.mod != null)
 			{
@@ -144,22 +130,21 @@ namespace SharpMik.Player
 			}
 		}
 
-		public Module Play(String name)
+		public Module Play(string name)
 		{
-			Module mod = LoadModule(name);
+			var mod = LoadModule(name);
 
 			if (mod != null)
 			{
 				Play(mod);
 			}
-		
+
 			return mod;
 		}
-
 
 		public Module Play(Stream stream)
 		{
-			Module mod = LoadModule(stream);
+			var mod = LoadModule(stream);
 
 			if (mod != null)
 			{
@@ -169,74 +154,47 @@ namespace SharpMik.Player
 			return mod;
 		}
 
-		public void Play(Module mod)
-		{
-			ModPlayer.Player_Start(mod);
-		}
+		public static void Play(Module mod) => ModPlayer.Player_Start(mod);
 
-		public bool IsPlaying()
-		{
-			return ModPlayer.Player_Active();
-		}
+		public static bool IsPlaying() => ModPlayer.Player_Active();
 
-		public void Stop()
-		{
-			ModPlayer.Player_Stop();
-		}
+		public static void Stop() => ModPlayer.Player_Stop();
 
-		public void TogglePause()
-		{
-			ModPlayer.Player_Paused();
-		}
+		public static void TogglePause() => ModPlayer.Player_Paused();
 
-
-		public void SetPosition(int position )
-		{
-			ModPlayer.Player_SetPosition((ushort)position);
-		}
+		public static void SetPosition(int position) => ModPlayer.Player_SetPosition((ushort)position);
 
 		// Fast forward will mute all the channels and mute the driver then update mikmod till it reaches the song position that is requested
 		// then it will unmute and unpause the audio after.
 		// this makes sure that no sound is heard while fast forwarding.
 		// the bonus of fast forwarding over setting the position is that it will know the real state of the mod.
-		public void FastForwardTo(int position)
+		public static void FastForwardTo(int position)
 		{
-			ModPlayer.Player_Mute_Channel(SharpMik.SharpMikCommon.MuteOptions.MuteAll, null);
+			ModPlayer.Player_Mute_Channel(MuteOptions.MuteAll, null);
 			ModDriver.Driver_Pause(true);
-			while (ModPlayer.mod.sngpos != position)
+			while (ModPlayer.mod.SongPosition != position)
 			{
 				ModDriver.MikMod_Update();
 			}
+
 			ModDriver.Driver_Pause(false);
-			ModPlayer.Player_UnMute_Channel(SharpMik.SharpMikCommon.MuteOptions.MuteAll, null);
+			ModPlayer.Player_UnMute_Channel(MuteOptions.MuteAll, null);
 		}
 
-		public void MuteChannel(int channel)
-		{
-			ModPlayer.Player_Mute_Channel(channel);
-		}
+		public static void MuteChannel(int channel) => ModPlayer.Player_Mute_Channel(channel);
 
-		public void MuteChannel(SharpMikCommon.MuteOptions option, params int[] list)
-		{
-			ModPlayer.Player_Mute_Channel(option, list);
-		}
+		public static void MuteChannel(MuteOptions option, params int[] list) => ModPlayer.Player_Mute_Channel(option, list);
 
-		public void UnMuteChannel(int channel)
-		{
-			ModPlayer.Player_UnMute_Channel(channel);
-		}
+		public static void UnMuteChannel(int channel) => ModPlayer.Player_UnMute_Channel(channel);
 
-		public void UnMuteChannel(SharpMikCommon.MuteOptions option, params int[] list)
-		{
-			ModPlayer.Player_UnMute_Channel(option, list);
-		}
+		public static void UnMuteChannel(MuteOptions option, params int[] list) => ModPlayer.Player_UnMute_Channel(option, list);
 
 		/// <summary>
 		/// Depending on the driver this might need to be called, it should be safe to call even if the driver is auto updating.
 		/// </summary>
-		public void Update()
+		public static void Update()
 		{
-			if (ModDriver.Driver != null && !ModDriver.Driver.AutoUpdating)
+			if (ModDriver.Driver?.AutoUpdating == false)
 			{
 				ModDriver.MikMod_Update();
 			}

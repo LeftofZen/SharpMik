@@ -1,13 +1,13 @@
-﻿using SharpMik.Player;
+﻿using SharpMik.Common;
+using SharpMik.Player;
 
 namespace SharpMik.Types
 {
 	public class BinaryModule
 	{
-		public bool m_Loaded = false;
+		public bool m_Loaded;
 		public Module m_Module;
 		public static short[][] m_Samples;
-
 
 		public BinaryModule()
 		{
@@ -19,9 +19,9 @@ namespace SharpMik.Types
 			// Shouldn't need to clone it...
 			m_Module = mod;
 
-			m_Samples = new short[m_Module.samples.Length][];
+			m_Samples = new short[m_Module.Samples.Length][];
 
-			for (int i = 0; i < m_Module.samples.Length; i++)
+			for (var i = 0; i < m_Module.Samples.Length; i++)
 			{
 				m_Samples[i] = ModDriver.MD_GetSample((short)i);
 			}
@@ -31,13 +31,13 @@ namespace SharpMik.Types
 		{
 			if (ModDriver.Driver != null)
 			{
-				for (int i = 0; i < m_Module.samples.Length; i++)
+				for (var i = 0; i < m_Module.Samples.Length; i++)
 				{
-					m_Module.samples[i].handle = ModDriver.MD_SetSample(m_Samples[i]);
+					m_Module.Samples[i].handle = ModDriver.MD_SetSample(m_Samples[i]);
 				}
 
 				ModPlayer.Player_Init(m_Module);
-				
+
 				m_Loaded = true;
 			}
 		}
