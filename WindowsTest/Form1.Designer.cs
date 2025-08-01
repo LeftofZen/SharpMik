@@ -28,173 +28,163 @@
 		/// </summary>
 		private void InitializeComponent()
 		{
-			this.toolStrip1 = new System.Windows.Forms.ToolStrip();
-			this.OpenMod = new System.Windows.Forms.ToolStripButton();
-			this.toolStripButton1 = new System.Windows.Forms.ToolStripButton();
-			this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
-			this.PlayPauseMod = new System.Windows.Forms.ToolStripButton();
-			this.StopMod = new System.Windows.Forms.ToolStripButton();
-			this.toolStripButton2 = new System.Windows.Forms.ToolStripButton();
-			this.toolStripButton3 = new System.Windows.Forms.ToolStripButton();
-			this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
-			this.toolStripLabel1 = new System.Windows.Forms.ToolStripLabel();
-			this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
-			this.CloseApp = new System.Windows.Forms.ToolStripButton();
-			this.listBox1 = new System.Windows.Forms.ListBox();
-			this.trackBar1 = new System.Windows.Forms.TrackBar();
-			this.toolStrip1.SuspendLayout();
-			((System.ComponentModel.ISupportInitialize)(this.trackBar1)).BeginInit();
-			this.SuspendLayout();
+			toolStrip1 = new System.Windows.Forms.ToolStrip();
+			OpenMod = new System.Windows.Forms.ToolStripButton();
+			toolStripButton1 = new System.Windows.Forms.ToolStripButton();
+			toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+			PlayPauseMod = new System.Windows.Forms.ToolStripButton();
+			StopMod = new System.Windows.Forms.ToolStripButton();
+			toolStripButton2 = new System.Windows.Forms.ToolStripButton();
+			toolStripButton3 = new System.Windows.Forms.ToolStripButton();
+			toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
+			toolStripLabel1 = new System.Windows.Forms.ToolStripLabel();
+			toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
+			CloseApp = new System.Windows.Forms.ToolStripButton();
+			listBox1 = new System.Windows.Forms.ListBox();
+			trackBar1 = new System.Windows.Forms.TrackBar();
+			toolStrip1.SuspendLayout();
+			((System.ComponentModel.ISupportInitialize)trackBar1).BeginInit();
+			SuspendLayout();
 			// 
 			// toolStrip1
 			// 
-			this.toolStrip1.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
-			this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.OpenMod,
-            this.toolStripButton1,
-            this.toolStripSeparator1,
-            this.PlayPauseMod,
-            this.StopMod,
-            this.toolStripButton2,
-            this.toolStripButton3,
-            this.toolStripSeparator2,
-            this.toolStripLabel1,
-            this.toolStripSeparator3,
-            this.CloseApp});
-			this.toolStrip1.Location = new System.Drawing.Point(0, 0);
-			this.toolStrip1.Name = "toolStrip1";
-			this.toolStrip1.Size = new System.Drawing.Size(510, 25);
-			this.toolStrip1.TabIndex = 0;
-			this.toolStrip1.Text = "toolStrip1";
-			this.toolStrip1.ItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.toolStrip1_ItemClicked);
+			toolStrip1.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
+			toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { OpenMod, toolStripButton1, toolStripSeparator1, PlayPauseMod, StopMod, toolStripButton2, toolStripButton3, toolStripSeparator2, toolStripLabel1, toolStripSeparator3, CloseApp });
+			toolStrip1.Location = new System.Drawing.Point(0, 0);
+			toolStrip1.Name = "toolStrip1";
+			toolStrip1.Size = new System.Drawing.Size(595, 25);
+			toolStrip1.TabIndex = 0;
+			toolStrip1.Text = "toolStrip1";
+			toolStrip1.ItemClicked += toolStrip1_ItemClicked;
 			// 
 			// OpenMod
 			// 
-			this.OpenMod.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-			this.OpenMod.Image = global::SharpMikTester.Properties.Resources.openHS;
-			this.OpenMod.ImageTransparentColor = System.Drawing.Color.Magenta;
-			this.OpenMod.Name = "OpenMod";
-			this.OpenMod.Size = new System.Drawing.Size(23, 22);
-			this.OpenMod.Text = "Open";
-			this.OpenMod.Click += new System.EventHandler(this.OpenMod_Click);
+			OpenMod.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+			OpenMod.Image = SharpMikTester.Properties.Resources.openHS;
+			OpenMod.ImageTransparentColor = System.Drawing.Color.Magenta;
+			OpenMod.Name = "OpenMod";
+			OpenMod.Size = new System.Drawing.Size(23, 22);
+			OpenMod.Text = "Open";
+			OpenMod.Click += OpenMod_Click;
 			// 
 			// toolStripButton1
 			// 
-			this.toolStripButton1.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-			this.toolStripButton1.Image = global::SharpMikTester.Properties.Resources._042b_AddCategory_16x16_72;
-			this.toolStripButton1.ImageTransparentColor = System.Drawing.Color.Magenta;
-			this.toolStripButton1.Name = "toolStripButton1";
-			this.toolStripButton1.Size = new System.Drawing.Size(23, 22);
-			this.toolStripButton1.Text = "toolStripButton1";
-			this.toolStripButton1.Click += new System.EventHandler(this.toolStripButton1_Click);
+			toolStripButton1.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+			toolStripButton1.Image = SharpMikTester.Properties.Resources._042b_AddCategory_16x16_72;
+			toolStripButton1.ImageTransparentColor = System.Drawing.Color.Magenta;
+			toolStripButton1.Name = "toolStripButton1";
+			toolStripButton1.Size = new System.Drawing.Size(23, 22);
+			toolStripButton1.Text = "toolStripButton1";
+			toolStripButton1.Click += toolStripButton1_Click;
 			// 
 			// toolStripSeparator1
 			// 
-			this.toolStripSeparator1.Name = "toolStripSeparator1";
-			this.toolStripSeparator1.Size = new System.Drawing.Size(6, 25);
+			toolStripSeparator1.Name = "toolStripSeparator1";
+			toolStripSeparator1.Size = new System.Drawing.Size(6, 25);
 			// 
 			// PlayPauseMod
 			// 
-			this.PlayPauseMod.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-			this.PlayPauseMod.Image = global::SharpMikTester.Properties.Resources.PlayHS;
-			this.PlayPauseMod.ImageTransparentColor = System.Drawing.Color.Magenta;
-			this.PlayPauseMod.Name = "PlayPauseMod";
-			this.PlayPauseMod.Size = new System.Drawing.Size(23, 22);
-			this.PlayPauseMod.Text = "Play";
-			this.PlayPauseMod.Click += new System.EventHandler(this.PlayPauseMod_Click);
+			PlayPauseMod.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+			PlayPauseMod.Image = SharpMikTester.Properties.Resources.PlayHS;
+			PlayPauseMod.ImageTransparentColor = System.Drawing.Color.Magenta;
+			PlayPauseMod.Name = "PlayPauseMod";
+			PlayPauseMod.Size = new System.Drawing.Size(23, 22);
+			PlayPauseMod.Text = "Play";
+			PlayPauseMod.Click += PlayPauseMod_Click;
 			// 
 			// StopMod
 			// 
-			this.StopMod.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-			this.StopMod.Image = global::SharpMikTester.Properties.Resources.StopHS;
-			this.StopMod.ImageTransparentColor = System.Drawing.Color.Magenta;
-			this.StopMod.Name = "StopMod";
-			this.StopMod.Size = new System.Drawing.Size(23, 22);
-			this.StopMod.Text = "toolStripButton3";
-			this.StopMod.Click += new System.EventHandler(this.StopMod_Click);
+			StopMod.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+			StopMod.Image = SharpMikTester.Properties.Resources.StopHS;
+			StopMod.ImageTransparentColor = System.Drawing.Color.Magenta;
+			StopMod.Name = "StopMod";
+			StopMod.Size = new System.Drawing.Size(23, 22);
+			StopMod.Text = "toolStripButton3";
+			StopMod.Click += StopMod_Click;
 			// 
 			// toolStripButton2
 			// 
-			this.toolStripButton2.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-			this.toolStripButton2.Image = global::SharpMikTester.Properties.Resources.NavBack;
-			this.toolStripButton2.ImageTransparentColor = System.Drawing.Color.Magenta;
-			this.toolStripButton2.Name = "toolStripButton2";
-			this.toolStripButton2.RightToLeft = System.Windows.Forms.RightToLeft.No;
-			this.toolStripButton2.Size = new System.Drawing.Size(23, 22);
-			this.toolStripButton2.Text = "toolStripButton2";
-			this.toolStripButton2.Click += new System.EventHandler(this.toolStripButton2_Click);
+			toolStripButton2.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+			toolStripButton2.Image = SharpMikTester.Properties.Resources.NavBack;
+			toolStripButton2.ImageTransparentColor = System.Drawing.Color.Magenta;
+			toolStripButton2.Name = "toolStripButton2";
+			toolStripButton2.RightToLeft = System.Windows.Forms.RightToLeft.No;
+			toolStripButton2.Size = new System.Drawing.Size(23, 22);
+			toolStripButton2.Text = "toolStripButton2";
+			toolStripButton2.Click += toolStripButton2_Click;
 			// 
 			// toolStripButton3
 			// 
-			this.toolStripButton3.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-			this.toolStripButton3.Image = global::SharpMikTester.Properties.Resources.NavForward;
-			this.toolStripButton3.ImageTransparentColor = System.Drawing.Color.Magenta;
-			this.toolStripButton3.Name = "toolStripButton3";
-			this.toolStripButton3.Size = new System.Drawing.Size(23, 22);
-			this.toolStripButton3.Text = "toolStripButton3";
-			this.toolStripButton3.Click += new System.EventHandler(this.toolStripButton3_Click);
+			toolStripButton3.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+			toolStripButton3.Image = SharpMikTester.Properties.Resources.NavForward;
+			toolStripButton3.ImageTransparentColor = System.Drawing.Color.Magenta;
+			toolStripButton3.Name = "toolStripButton3";
+			toolStripButton3.Size = new System.Drawing.Size(23, 22);
+			toolStripButton3.Text = "toolStripButton3";
+			toolStripButton3.Click += toolStripButton3_Click;
 			// 
 			// toolStripSeparator2
 			// 
-			this.toolStripSeparator2.Name = "toolStripSeparator2";
-			this.toolStripSeparator2.Size = new System.Drawing.Size(6, 25);
+			toolStripSeparator2.Name = "toolStripSeparator2";
+			toolStripSeparator2.Size = new System.Drawing.Size(6, 25);
 			// 
 			// toolStripLabel1
 			// 
-			this.toolStripLabel1.AutoSize = false;
-			this.toolStripLabel1.Name = "toolStripLabel1";
-			this.toolStripLabel1.Size = new System.Drawing.Size(200, 22);
+			toolStripLabel1.AutoSize = false;
+			toolStripLabel1.Name = "toolStripLabel1";
+			toolStripLabel1.Size = new System.Drawing.Size(200, 22);
 			// 
 			// toolStripSeparator3
 			// 
-			this.toolStripSeparator3.Name = "toolStripSeparator3";
-			this.toolStripSeparator3.Size = new System.Drawing.Size(6, 25);
+			toolStripSeparator3.Name = "toolStripSeparator3";
+			toolStripSeparator3.Size = new System.Drawing.Size(6, 25);
 			// 
 			// CloseApp
 			// 
-			this.CloseApp.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-			this.CloseApp.Image = global::SharpMikTester.Properties.Resources._305_Close_16x16_72;
-			this.CloseApp.ImageTransparentColor = System.Drawing.Color.Magenta;
-			this.CloseApp.Name = "CloseApp";
-			this.CloseApp.Size = new System.Drawing.Size(23, 22);
-			this.CloseApp.Text = "toolStripButton4";
-			this.CloseApp.Click += new System.EventHandler(this.CloseApp_Click);
+			CloseApp.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+			CloseApp.Image = SharpMikTester.Properties.Resources._305_Close_16x16_72;
+			CloseApp.ImageTransparentColor = System.Drawing.Color.Magenta;
+			CloseApp.Name = "CloseApp";
+			CloseApp.Size = new System.Drawing.Size(23, 22);
+			CloseApp.Text = "toolStripButton4";
+			CloseApp.Click += CloseApp_Click;
 			// 
 			// listBox1
 			// 
-			this.listBox1.FormattingEnabled = true;
-			this.listBox1.Location = new System.Drawing.Point(0, 59);
-			this.listBox1.Margin = new System.Windows.Forms.Padding(0);
-			this.listBox1.Name = "listBox1";
-			this.listBox1.Size = new System.Drawing.Size(509, 212);
-			this.listBox1.TabIndex = 2;
+			listBox1.FormattingEnabled = true;
+			listBox1.Location = new System.Drawing.Point(0, 68);
+			listBox1.Margin = new System.Windows.Forms.Padding(0);
+			listBox1.Name = "listBox1";
+			listBox1.Size = new System.Drawing.Size(593, 244);
+			listBox1.TabIndex = 2;
 			// 
 			// trackBar1
 			// 
-			this.trackBar1.Enabled = false;
-			this.trackBar1.Location = new System.Drawing.Point(0, 28);
-			this.trackBar1.Name = "trackBar1";
-			this.trackBar1.Size = new System.Drawing.Size(509, 45);
-			this.trackBar1.TabIndex = 3;
-			this.trackBar1.TickStyle = System.Windows.Forms.TickStyle.None;
+			trackBar1.Enabled = false;
+			trackBar1.Location = new System.Drawing.Point(0, 32);
+			trackBar1.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+			trackBar1.Name = "trackBar1";
+			trackBar1.Size = new System.Drawing.Size(594, 45);
+			trackBar1.TabIndex = 3;
+			trackBar1.TickStyle = System.Windows.Forms.TickStyle.None;
 			// 
 			// Form1
 			// 
-			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(510, 268);
-			this.ControlBox = false;
-			this.Controls.Add(this.listBox1);
-			this.Controls.Add(this.trackBar1);
-			this.Controls.Add(this.toolStrip1);
-			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
-			this.Name = "Form1";
-			this.Text = "  ";
-			this.toolStrip1.ResumeLayout(false);
-			this.toolStrip1.PerformLayout();
-			((System.ComponentModel.ISupportInitialize)(this.trackBar1)).EndInit();
-			this.ResumeLayout(false);
-			this.PerformLayout();
+			AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
+			AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+			ClientSize = new System.Drawing.Size(595, 309);
+			Controls.Add(listBox1);
+			Controls.Add(trackBar1);
+			Controls.Add(toolStrip1);
+			FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
+			Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+			Name = "Form1";
+			Text = "SharpMik";
+			toolStrip1.ResumeLayout(false);
+			toolStrip1.PerformLayout();
+			((System.ComponentModel.ISupportInitialize)trackBar1).EndInit();
+			ResumeLayout(false);
+			PerformLayout();
 
 		}
 

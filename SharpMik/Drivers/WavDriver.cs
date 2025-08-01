@@ -1,11 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.IO;
 using SharpMik.Player;
 using SharpMik.Extentions;
-using System.Diagnostics;
 
 namespace SharpMik.Drivers
 {

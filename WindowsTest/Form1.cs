@@ -1,15 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 using SharpMik;
 using SharpMik.Player;
 using SharpMik.Drivers;
-using System.Threading;
 
 using System.IO;
 
@@ -19,13 +13,16 @@ namespace SharpMilk
 	{
 		Module m_Mod = null;
 		bool m_Playing = false;
-
-
 		MikMod m_Player;
 
 		public Form1()
 		{
 			InitializeComponent();
+			// Ensure the form has minimize, maximize, and close buttons
+			this.ControlBox = true;
+			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.Sizable;
+			this.MinimizeBox = true;
+			this.MaximizeBox = true;
 
 			m_Player = new MikMod();
 			m_Player.PlayerStateChangeEvent += new ModPlayer.PlayerStateChangedEvent(m_Player_PlayerStateChangeEvent);
@@ -49,7 +46,7 @@ namespace SharpMilk
 				};
 				trackBar1.BeginInvoke(action);
 			}
-			
+
 		}
 
 		protected override void OnLoad(EventArgs e)
@@ -82,18 +79,18 @@ namespace SharpMilk
 		private void OpenMod_Click(object sender, EventArgs e)
 		{
 			OpenFileDialog dialog = new OpenFileDialog();
-            var extentions = SharpMikCommon.ModFileExtentions;
+			var extentions = SharpMikCommon.ModFileExtentions;
 
-            String filters = "All (*.*)|*.*|";
-            foreach (var item in extentions)
-            {
-                filters +=  "(*"+item + ")|*" + item + "|";
-            }
+			String filters = "All (*.*)|*.*|";
+			foreach (var item in extentions)
+			{
+				filters += "(*" + item + ")|*" + item + "|";
+			}
 
-            if (filters.Length > 0)
-            {
-                dialog.Filter = filters.Substring(0, filters.Length - 1);
-            }
+			if (filters.Length > 0)
+			{
+				dialog.Filter = filters.Substring(0, filters.Length - 1);
+			}
 
 			DialogResult result = dialog.ShowDialog();
 
@@ -112,7 +109,7 @@ namespace SharpMilk
 				m_Playing = false;
 				m_WasPlaying = false;
 				PlayPauseMod.Image = global::SharpMikTester.Properties.Resources.PlayHS;
-			}	
+			}
 		}
 
 		bool m_WasPlaying = false;
@@ -189,9 +186,9 @@ namespace SharpMilk
 					{
 						m_FileList.Add(name);
 						String shortName = Path.GetFileNameWithoutExtension(name);
-						listBox1.Items.Add(shortName+ " ("+name+")");
+						listBox1.Items.Add(shortName + " (" + name + ")");
 					}
-				}				
+				}
 
 				place = 0;
 
@@ -227,7 +224,7 @@ namespace SharpMilk
 		{
 			place--;
 
-			if (place < 0 )
+			if (place < 0)
 			{
 				place = m_FileList.Count - 1;
 			}

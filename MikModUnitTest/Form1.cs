@@ -1,16 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 using System.Threading;
 using System.IO;
 using System.Diagnostics;
-using System.Linq.Expressions;
-using System.Reflection;
 
 
 using SharpMik;
@@ -111,11 +106,11 @@ namespace MikModUnitTest
 				StopButton.Enabled = true;
 
 				textBox1.Enabled = false;
-				
+
 				textBox3.Enabled = false;
 				textBox4.Enabled = false;
 				button1.Enabled = false;
-				button2.Enabled = false;				
+				button2.Enabled = false;
 				button4.Enabled = false;
 
 				m_RunThread = new Thread(new ThreadStart(TestThread));
@@ -127,13 +122,13 @@ namespace MikModUnitTest
 
 		void ResetButtons()
 		{
-			MethodInvoker action = delegate
+			System.Windows.Forms.MethodInvoker action = delegate
 			{
 				Start.Enabled = true;
 
 				StopButton.Enabled = false;
 
-				textBox1.Enabled = true;				
+				textBox1.Enabled = true;
 				textBox3.Enabled = true;
 				textBox4.Enabled = true;
 				button1.Enabled = true;
@@ -197,8 +192,8 @@ namespace MikModUnitTest
 		}
 
 
-		
-		
+
+
 		void TestThread()
 		{
 			DateTime totalStart = DateTime.Now;
@@ -208,7 +203,7 @@ namespace MikModUnitTest
 
 			//modFiles.Clear();
 
-			var files = Directory.EnumerateFiles(m_Options.TestModFolder, "*.*",SearchOption.AllDirectories);
+			var files = Directory.EnumerateFiles(m_Options.TestModFolder, "*.*", SearchOption.AllDirectories);
 
 			List<String> modFiles = new List<String>();
 
@@ -224,7 +219,7 @@ namespace MikModUnitTest
 			int count = 0;
 
 
-			MethodInvoker action = delegate
+			System.Windows.Forms.MethodInvoker action = delegate
 			{
 				progressBar2.Maximum = modFiles.Count();
 				progressBar2.Value = 0;
@@ -270,15 +265,15 @@ namespace MikModUnitTest
 					String justFileName = Path.GetFileName(fileName);
 					String failName = Path.Combine(failedFolder, justFileName);
 
-					if(!File.Exists(failName))
+					if (!File.Exists(failName))
 					{
 						if (!Directory.Exists(failedFolder))
 						{
 							Directory.CreateDirectory(Path.Combine(m_Options.TestDirectory, "Failed"));
 						}
-				
+
 						File.Copy(fileName, failName);
-					}					
+					}
 				}
 
 				// Write out the results after each test, this will help if the app crashes.
@@ -331,7 +326,7 @@ namespace MikModUnitTest
 				if (s_StopThread)
 				{
 					break;
-				}				
+				}
 			}
 
 			s_StopThread = false;
@@ -394,7 +389,7 @@ namespace MikModUnitTest
 			TimeSpan span = DateTime.Now - start;
 			m_CTestTime = (float)span.TotalSeconds;
 
-			String mikModCWav = Path.Combine(m_Options.TestDirectory,"mikmodC.wav");
+			String mikModCWav = Path.Combine(m_Options.TestDirectory, "mikmodC.wav");
 
 			if (File.Exists(mikModCWav))
 			{
@@ -459,7 +454,7 @@ namespace MikModUnitTest
 
 							mikModCReader.BaseStream.Seek(44, SeekOrigin.Begin);
 							m_SharpTest.MemStream.Seek(0, SeekOrigin.Begin);
-							long size = cSize-44;
+							long size = cSize - 44;
 							for (long i = 0; i < size; i++)
 							{
 								cByte = mikModCReader.ReadByte();
@@ -506,7 +501,7 @@ namespace MikModUnitTest
 
 
 			return result;
-		}		
+		}
 
 		static bool s_StopThread = false;
 		private void Stop_Click(object sender, EventArgs e)
@@ -523,7 +518,7 @@ namespace MikModUnitTest
 
 	public class TestResult
 	{
-		public String ModName { get;set;}
+		public String ModName { get; set; }
 		public float MatchPercentage { get; set; }
 		public String Error { get; set; }
 		public bool Passed { get; set; }

@@ -1,13 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 using SharpMik.Interfaces;
 using SharpMik.Extentions;
-using SharpMik;
 using System.IO;
-using System.Diagnostics;
 using SharpMik.Attributes;
 
 namespace SharpMik.Loaders

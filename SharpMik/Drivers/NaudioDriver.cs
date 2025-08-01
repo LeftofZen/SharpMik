@@ -1,12 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using SharpMik.Interfaces;
-using SharpMik.Drivers;
 using NAudio.Wave;
 using SharpMik.Player;
-using SharpMik;
 
 namespace SharpMik.Drivers
 {
@@ -27,7 +21,7 @@ namespace SharpMik.Drivers
 		public override long Position
 		{
 			get { return 0; }
-			set { ;}
+			set {; }
 		}
 
 		public override long Length
@@ -47,7 +41,7 @@ namespace SharpMik.Drivers
 	}
 
 	public class NaudioDriver : VirtualSoftwareDriver
-	{	
+	{
 		IWavePlayer waveOut;
 		NAudioTrackerStream m_NAudioStream;
 		bool stopped = false;
@@ -143,7 +137,7 @@ namespace SharpMik.Drivers
 
 		public override void Update()
 		{
-			
+
 		}
 
 		public override void Pause()

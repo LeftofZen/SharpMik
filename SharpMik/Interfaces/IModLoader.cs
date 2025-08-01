@@ -1,10 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using SharpMik.IO;
-
-using SharpMik;
 using SharpMik.Extentions;
 using SharpMik.Player;
 
