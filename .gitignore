@@ -1,6 +1,8 @@
 *.suo
 *.user
+*.bin
 bin
 obj
 packages
 .vs/
+.vs/**
