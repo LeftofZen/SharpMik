@@ -1,11 +1,11 @@
-﻿using SharpMik.Interfaces;
-using System.IO;
 using SharpMik.Attributes;
 using SharpMik.Common;
+using SharpMik.Interfaces;
+using System.IO;
 
 namespace SharpMik.Loaders
 {
-	[ModFileExtentions(".669")]
+	[ModFileExtensions(".669")]
 	public class _669Loader : IModLoader
 	{
 		class S69HEADER
@@ -43,7 +43,7 @@ namespace SharpMik.Loaders
 		S69HEADER mh;
 
 		/* file type identification */
-		static readonly string[] S69_Version =[
+		static readonly string[] S69_Version = [
 				"Composer 669",
 				"Extended 669"
 			];
@@ -83,7 +83,7 @@ namespace SharpMik.Loaders
 				int i;
 
 				/* skip song message */
-				m_Reader.Seek(108, SeekOrigin.Current);
+				_ = m_Reader.Seek(108, SeekOrigin.Current);
 
 				/* sanity checks */
 				if (m_Reader.Read_byte() > 64)
@@ -158,13 +158,13 @@ namespace SharpMik.Loaders
 			S69SAMPLE sample;
 
 			/* module header */
-			m_Reader.Read_bytes(mh.marker, 2);
+			_ = m_Reader.Read_bytes(mh.marker, 2);
 			mh.message = m_Reader.Read_String(108);
 
 			mh.nos = m_Reader.Read_byte();
 			mh.nop = m_Reader.Read_byte();
 			mh.looporder = m_Reader.Read_byte();
-			m_Reader.Read_bytes(mh.orders, 0x80);
+			_ = m_Reader.Read_bytes(mh.orders, 0x80);
 
 			for (i = 0; i < 0x80; i++)
 			{
@@ -175,7 +175,7 @@ namespace SharpMik.Loaders
 				}
 			}
 
-			m_Reader.Read_bytes(mh.tempos, 0x80);
+			_ = m_Reader.Read_bytes(mh.tempos, 0x80);
 			for (i = 0; i < 0x80; i++)
 			{
 				if (mh.tempos[i] is 0 or > 32)
@@ -185,7 +185,7 @@ namespace SharpMik.Loaders
 				}
 			}
 
-			m_Reader.Read_bytes(mh.breaks, 0x80);
+			_ = m_Reader.Read_bytes(mh.breaks, 0x80);
 
 			for (i = 0; i < 0x80; i++)
 			{
@@ -199,7 +199,7 @@ namespace SharpMik.Loaders
 			/* set module variables */
 			m_Module.InitialSpeed = 4;
 			m_Module.InitialTempo = 78;
-			m_Module.SongName = mh.message.Substring(0, 36);
+			m_Module.SongName = mh.message[..36];
 			if (mh.marker[0] == 'i' && mh.marker[1] == 'f')
 			{
 				m_Module.ModType = S69_Version[0];
@@ -464,7 +464,7 @@ namespace SharpMik.Loaders
 
 		public override string LoadTitle()
 		{
-			m_Reader.Seek(2, SeekOrigin.Begin);
+			_ = m_Reader.Seek(2, SeekOrigin.Begin);
 			var name = m_Reader.Read_String(36);
 			return name;
 		}

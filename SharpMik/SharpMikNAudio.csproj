@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFramework>net9.0</TargetFramework>
+		<TargetFramework>net10.0</TargetFramework>
 		<OutputType>Library</OutputType>
 		<RootNamespace>SharpMik</RootNamespace>
 	</PropertyGroup>
@@ -13,9 +13,9 @@
 	<ItemGroup>
 	  <Compile Remove="Drivers\NaudioDriver.cs" />
 	  <Compile Remove="Drivers\VirtualDriver1.cs" />
+	  <Compile Remove="Drivers\XNADriver.cs" />
 	</ItemGroup>
 	<ItemGroup>
-		<PackageReference Include="MonoGame.Framework.WindowsDX" Version="3.8.4" />
 		<PackageReference Include="NAudio" Version="2.2.1" />
 	</ItemGroup>
 </Project>

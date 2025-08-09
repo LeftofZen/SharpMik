@@ -1,27 +1,25 @@
-﻿using System.IO;
-
-using SharpMik.Extentions;
+using SharpMik.Extensions;
+using System.IO;
 
 namespace SharpMik.Drivers
 {
 
 	public class PushStreamDriver : VirtualSoftwareDriver
 	{
-		MemoryStream m_MemoryStream;
 		sbyte[] m_Audiobuffer;
 
 		public static uint BUFFERSIZE = 32768;
 
-		public MemoryStream MemoryStream => m_MemoryStream;
+		public MemoryStream MemoryStream { get; private set; }
 
 		public PushStreamDriver()
 		{
-			m_Next = null;
-			m_Name = "Mem Writer";
-			m_Version = "Mem stream writer";
-			m_HardVoiceLimit = 0;
-			m_SoftVoiceLimit = 255;
-			m_AutoUpdating = false;
+			NextDriver = null;
+			Name = "Mem Writer";
+			Version = "Mem stream writer";
+			HardVoiceLimit = 0;
+			SoftVoiceLimit = 255;
+			AutoUpdating = false;
 		}
 
 		public override void CommandLine(string command)
@@ -41,7 +39,7 @@ namespace SharpMik.Drivers
 
 		public override bool PlayStart()
 		{
-			m_MemoryStream = new MemoryStream();
+			MemoryStream = new MemoryStream();
 			return base.PlayStart();
 		}
 
@@ -53,7 +51,7 @@ namespace SharpMik.Drivers
 		public override void Update()
 		{
 			var done = WriteBytes(m_Audiobuffer, BUFFERSIZE);
-			m_MemoryStream.Write(m_Audiobuffer, 0, (int)done);
+			MemoryStream.Write(m_Audiobuffer, 0, (int)done);
 		}
 	}
 }

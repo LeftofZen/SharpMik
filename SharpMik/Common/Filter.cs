@@ -1,4 +1,4 @@
-﻿namespace SharpMik.Common
+namespace SharpMik.Common
 {
 	/*
 	 * MikMod variable sizes and replaced with.

@@ -1,14 +1,13 @@
-﻿using System;
-using System.IO;
-
-using SharpMik.Interfaces;
 using SharpMik.Attributes;
 using SharpMik.Common;
+using SharpMik.Interfaces;
+using System;
+using System.IO;
 
 namespace SharpMik.Loaders
 {
 
-	[ModFileExtentions(".amf")]
+	[ModFileExtensions(".amf")]
 	public class AMFLoader : IModLoader
 	{
 		/*========== Module structure */
@@ -460,11 +459,11 @@ else
 			if (mh.version >= 11)
 			{
 				Array.Clear(mh.panpos, 0, 32);
-				m_Reader.Read_bytes(mh.panpos, (mh.version >= 13) ? 32 : 16);
+				_ = m_Reader.Read_bytes(mh.panpos, (mh.version >= 13) ? 32 : 16);
 			}
 			else
 			{
-				m_Reader.Read_bytes(channel_remap, 16);
+				_ = m_Reader.Read_bytes(channel_remap, 16);
 			}
 
 			if (mh.version >= 13)
@@ -586,7 +585,7 @@ else
 
 				if (mh.version >= 10)
 				{
-					m_Reader.Read_Intel_ushorts(m_Module.Patterns, t * m_Module.NumChannels, m_Module.NumChannels);
+					_ = m_Reader.Read_Intel_ushorts(m_Module.Patterns, t * m_Module.NumChannels, m_Module.NumChannels);
 				}
 				else
 				{
@@ -663,10 +662,9 @@ else
 
 			/* read track table */
 			track_remap = new ushort[mh.numtracks + 1];
-			m_Reader.Read_Intel_ushorts(track_remap, 1, mh.numtracks);
+			_ = m_Reader.Read_Intel_ushorts(track_remap, 1, mh.numtracks);
 			if (m_Reader.isEOF())
 			{
-				track_remap = null;
 				m_LoadError = MMERR_LOADING_TRACK;
 				return false;
 			}
@@ -683,8 +681,6 @@ else
 			{
 				m_Module.Patterns[t] = (ushort)((m_Module.Patterns[t] <= mh.numtracks) ? track_remap[m_Module.Patterns[t]] - 1 : realtrackcnt);
 			}
-
-			track_remap = null;
 
 			/* unpack tracks */
 			for (t = 0; t < realtrackcnt; t++)
@@ -728,10 +724,10 @@ else
 				return false;
 			}
 
-			m_Reader.Seek(0, SeekOrigin.End);
+			_ = m_Reader.Seek(0, SeekOrigin.End);
 			fileend = (uint)m_Reader.Tell();
 
-			m_Reader.Seek((int)samplepos, SeekOrigin.Begin);
+			_ = m_Reader.Seek((int)samplepos, SeekOrigin.Begin);
 
 			for (realsmpcnt = t = 0; t < m_Module.NumSamples; t++)
 			{

@@ -1,6 +1,6 @@
-﻿using System;
 using SharpMik.Common;
 using SharpMik.Player;
+using System;
 
 namespace SharpMik.SoftwareMixers
 {
@@ -45,7 +45,7 @@ namespace SharpMik.SoftwareMixers
 				if (m_CurrentVoiceInfo.RampVolume != 0)
 				{
 					dest[place++] +=
-					  ((m_CurrentVoiceInfo.LeftVolumeOld * m_CurrentVoiceInfo.RampVolume +
+					  (((m_CurrentVoiceInfo.LeftVolumeOld * m_CurrentVoiceInfo.RampVolume) +
 						  (m_CurrentVoiceInfo.LeftVolumeFactor * (CLICK_BUFFER - m_CurrentVoiceInfo.RampVolume))) *
 						sample) >> CLICK_SHIFT;
 					m_CurrentVoiceInfo.RampVolume--;
@@ -141,7 +141,7 @@ namespace SharpMik.SoftwareMixers
 				if (m_CurrentVoiceInfo.RampVolume != 0)
 				{
 					whoop =
-					  ((m_CurrentVoiceInfo.LeftVolumeOld * m_CurrentVoiceInfo.RampVolume +
+					  (((m_CurrentVoiceInfo.LeftVolumeOld * m_CurrentVoiceInfo.RampVolume) +
 						  (m_CurrentVoiceInfo.LeftVolumeFactor * (CLICK_BUFFER - m_CurrentVoiceInfo.RampVolume))) *
 						sample) >> CLICK_SHIFT;
 					dest[place++] += (int)whoop;
@@ -190,7 +190,7 @@ namespace SharpMik.SoftwareMixers
 				if (m_CurrentVoiceInfo.RampVolume != 0)
 				{
 					dest[place++] +=
-					  ((m_CurrentVoiceInfo.LeftVolumeOld * m_CurrentVoiceInfo.RampVolume +
+					  (((m_CurrentVoiceInfo.LeftVolumeOld * m_CurrentVoiceInfo.RampVolume) +
 						  (m_CurrentVoiceInfo.LeftVolumeFactor * (CLICK_BUFFER - m_CurrentVoiceInfo.RampVolume))) *
 						sample) >> CLICK_SHIFT;
 					m_CurrentVoiceInfo.RampVolume--;
@@ -287,7 +287,7 @@ namespace SharpMik.SoftwareMixers
 				if (m_CurrentVoiceInfo.RampVolume != 0)
 				{
 					whoop =
-					  ((m_CurrentVoiceInfo.LeftVolumeOld * m_CurrentVoiceInfo.RampVolume +
+					  (((m_CurrentVoiceInfo.LeftVolumeOld * m_CurrentVoiceInfo.RampVolume) +
 						  (m_CurrentVoiceInfo.LeftVolumeFactor * (CLICK_BUFFER - m_CurrentVoiceInfo.RampVolume))) *
 						sample) >> CLICK_SHIFT;
 					dest[place++] += (int)whoop;
@@ -575,12 +575,10 @@ namespace SharpMik.SoftwareMixers
 
 		protected override uint WriteSamples(sbyte[] buf, uint todo)
 		{
-			int left, portion = 0;
+			int left;
 			int t, pan, vol;
 
 			todo *= SAMPLING_FACTOR;
-
-			var bufferPlace = 0;
 			var bufPlace = 0;
 
 			while (todo != 0)
@@ -598,7 +596,7 @@ namespace SharpMik.SoftwareMixers
 
 				left = (int)Math.Min(m_TickLeft, todo);
 
-				bufferPlace = bufPlace;
+				var bufferPlace = bufPlace;
 
 				m_TickLeft -= left;
 				todo -= (uint)left;
@@ -606,7 +604,7 @@ namespace SharpMik.SoftwareMixers
 
 				while (left != 0)
 				{
-					portion = (int)Math.Min(left, m_SamplesThatFit);
+					var portion = (int)Math.Min(left, m_SamplesThatFit);
 					Array.Clear(m_VcTickBuf, 0, TICKLSIZE);
 
 					for (t = 0; t < m_VcSoftChannel; t++)

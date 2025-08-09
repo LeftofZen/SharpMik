@@ -1,12 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.IO;
+using SharpMik.Common;
 using SharpMik.Interfaces;
-using System.Reflection;
 using SharpMik.IO;
 using SharpMik.Player;
-using SharpMik.Common;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection;
 using Module = SharpMik.Common.Module;
 
 namespace SharpMik
@@ -18,20 +18,20 @@ namespace SharpMik
 	 * 
 	 * I don't see much need to change the basics of this file, the static nature of it should be fine.
 	 */
-	public class ModuleLoader
+	public static class ModuleLoader
 	{
 
 		#region private static variables
-		static readonly List<Type> s_RegistedModuleLoader = new();
+		static readonly List<Type> s_RegistedModuleLoader = [];
 		static bool s_HasAutoRegisted;
 		#endregion
 
 		#region static accessors
-		static public bool UseBuiltInModuleLoaders { get; set; } = true;
+		public static bool UseBuiltInModuleLoaders { get; set; } = true;
 		#endregion
 
 		#region loader registration
-		static public void BuildRegisteredModules()
+		public static void BuildRegisteredModules()
 		{
 			if (!s_HasAutoRegisted && UseBuiltInModuleLoaders)
 			{
@@ -68,8 +68,6 @@ namespace SharpMik
 		public static Module Load(Stream stream, int maxchan, int curious)
 		{
 			BuildRegisteredModules();
-			Module mod = null;
-
 			var modReader = new ModuleReader(stream);
 			IModLoader loader = null;
 
@@ -89,10 +87,9 @@ namespace SharpMik
 				tester.Cleanup();
 			}
 
+			Module mod;
 			if (loader != null)
 			{
-
-				var t = 0;
 				mod = new Module();
 				loader.Module = mod;
 
@@ -105,6 +102,7 @@ namespace SharpMik
 				mod.BpmLimit = 33;
 				mod.InitialVolume = 128;
 
+				int t;
 				for (t = 0; t < Constants.UF_MAXCHAN; t++)
 				{
 					mod.ChannelVolume[t] = 64;
@@ -134,7 +132,7 @@ namespace SharpMik
 
 				if (loaded)
 				{
-					ML_LoadSamples(mod, modReader);
+					_ = ML_LoadSamples(mod, modReader);
 
 					if ((mod.Flags & Constants.UF_PANNING) != Constants.UF_PANNING)
 					{
@@ -165,14 +163,13 @@ namespace SharpMik
 
 						if (ModDriver.MikMod_SetNumVoices_internal(maxchan, -1))
 						{
-							mod = null;
 							return null;
 						}
 					}
 
-					SampleLoader.SL_LoadSamples();
+					_ = SampleLoader.SL_LoadSamples();
 
-					ModPlayer.Player_Init(mod);
+					_ = ModPlayer.Player_Init(mod);
 				}
 				else
 				{
@@ -188,7 +185,7 @@ namespace SharpMik
 			return mod;
 		}
 
-		private static void LoadFailed(IModLoader loader, Exception ex)
+		static void LoadFailed(IModLoader loader, Exception ex)
 		{
 			if (loader != null)
 			{
@@ -203,7 +200,7 @@ namespace SharpMik
 		#endregion
 
 		#region Common Load Implementation
-		private static bool ML_LoadSamples(Module of, ModuleReader modreader)
+		static bool ML_LoadSamples(Module of, ModuleReader modreader)
 		{
 			int u;
 
@@ -211,7 +208,7 @@ namespace SharpMik
 			{
 				if (of.Samples[u].length != 0)
 				{
-					SampleLoader.SL_RegisterSample(of.Samples[u], (int)MDTypes.MD_MUSIC, modreader);
+					_ = SampleLoader.SL_RegisterSample(of.Samples[u], (int)MDTypes.MD_MUSIC, modreader);
 				}
 			}
 

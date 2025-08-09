@@ -1,12 +1,12 @@
-﻿using System;
+using SharpMik.Common;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Windows.Forms;
-using System.Threading;
-using System.IO;
 using System.Diagnostics;
-using SharpMik.Common;
+using System.IO;
+using System.Linq;
+using System.Threading;
+using System.Windows.Forms;
 
 namespace MikModUnitTest
 {
@@ -64,7 +64,7 @@ namespace MikModUnitTest
 			}
 		}
 
-		private void button2_Click(object sender, EventArgs e)
+		void button2_Click(object sender, EventArgs e)
 		{
 			var dialog = new OpenFileDialog
 			{
@@ -79,7 +79,7 @@ namespace MikModUnitTest
 			}
 		}
 
-		private void button4_Click(object sender, EventArgs e)
+		void button4_Click(object sender, EventArgs e)
 		{
 			var dialog = new FolderBrowserDialog();
 
@@ -91,13 +91,13 @@ namespace MikModUnitTest
 			}
 		}
 
-		private void Start_Click(object sender, EventArgs e)
+		void Start_Click(object sender, EventArgs e)
 		{
 			Start.Enabled = false;
 
 			if (!File.Exists(m_Options.MikModCExe))
 			{
-				MessageBox.Show("C mikMod exe could not be found");
+				_ = MessageBox.Show("C mikMod exe could not be found");
 			}
 			else
 			{
@@ -135,15 +135,15 @@ namespace MikModUnitTest
 				button4.Enabled = true;
 			};
 
-			BeginInvoke(action);
+			_ = BeginInvoke(action);
 		}
 
-		private void Result_Enter(object sender, EventArgs e)
+		void Result_Enter(object sender, EventArgs e)
 		{
 
 		}
 
-		private void button1_Click(object sender, EventArgs e)
+		void button1_Click(object sender, EventArgs e)
 		{
 			var dialog = new FolderBrowserDialog();
 
@@ -155,13 +155,13 @@ namespace MikModUnitTest
 			}
 		}
 
-		private void textBox1_TextChanged(object sender, EventArgs e) => UpdateSaveFile();
+		void textBox1_TextChanged(object sender, EventArgs e) => UpdateSaveFile();
 
-		private void textBox2_TextChanged(object sender, EventArgs e) => UpdateSaveFile();
+		void textBox2_TextChanged(object sender, EventArgs e) => UpdateSaveFile();
 
-		private void textBox3_TextChanged(object sender, EventArgs e) => UpdateSaveFile();
+		void textBox3_TextChanged(object sender, EventArgs e) => UpdateSaveFile();
 
-		private void textBox4_TextChanged(object sender, EventArgs e) => UpdateSaveFile();
+		void textBox4_TextChanged(object sender, EventArgs e) => UpdateSaveFile();
 
 		void UpdateSaveFile()
 		{
@@ -172,7 +172,7 @@ namespace MikModUnitTest
 				m_Options.TestDirectory = textBox4.Text;
 				m_Options.CopyBrokenMods = checkBox1.Checked;
 
-				UnitTestHelpers.WriteXML(s_OptionsFileName, m_Options);
+				_ = UnitTestHelpers.WriteXML(s_OptionsFileName, m_Options);
 			}
 		}
 
@@ -204,7 +204,7 @@ namespace MikModUnitTest
 				progressBar2.Maximum = modFiles.Count();
 				progressBar2.Value = 0;
 			};
-			progressBar2.BeginInvoke(action);
+			_ = progressBar2.BeginInvoke(action);
 
 			var total = 0.0f;
 			var passed = 0;
@@ -214,7 +214,7 @@ namespace MikModUnitTest
 			{
 				label7.Text = string.Format("Testing {0} of {1} mods in {5} seconds, Passed: {2}, Failed: {3}, Passing percentage {4}", count, modFiles.Count(), passed, failed, 0.0, (DateTime.Now - totalStart).TotalSeconds);
 			};
-			label7.BeginInvoke(action);
+			_ = label7.BeginInvoke(action);
 
 			foreach (var fileName in modFiles)
 			{
@@ -243,7 +243,7 @@ namespace MikModUnitTest
 					{
 						if (!Directory.Exists(failedFolder))
 						{
-							Directory.CreateDirectory(Path.Combine(m_Options.TestDirectory, "Failed"));
+							_ = Directory.CreateDirectory(Path.Combine(m_Options.TestDirectory, "Failed"));
 						}
 
 						File.Copy(fileName, failName);
@@ -251,7 +251,7 @@ namespace MikModUnitTest
 				}
 
 				// Write out the results after each test, this will help if the app crashes.
-				UnitTestHelpers.WriteXML(Path.Combine(m_Options.TestDirectory, "test.xml"), testResults);
+				_ = UnitTestHelpers.WriteXML(Path.Combine(m_Options.TestDirectory, "test.xml"), testResults);
 
 				total += result.MatchPercentage;
 				count++;
@@ -281,20 +281,20 @@ namespace MikModUnitTest
 					{
 						progressBar2.Value = count;
 					};
-					progressBar2.BeginInvoke(action);
+					_ = progressBar2.BeginInvoke(action);
 
 					action = delegate
 					{
-						dataGridView1.Rows.Add(data);
+						_ = dataGridView1.Rows.Add(data);
 					};
-					dataGridView1.BeginInvoke(action);
+					_ = dataGridView1.BeginInvoke(action);
 
 					action = delegate
 					{
 						label7.Text = string.Format("Testing {0} of {1} mods in {5} seconds, Passed: {2}, Failed: {3}, Passing percentage {4}", count, modFiles.Count(), passed, failed, total / count, (DateTime.Now - totalStart).TotalSeconds);
 						//label7.Text = String.Format("Testing {0} of {1} mods, Passed: {2}, Failed: {3}, Passing percentage {4}", count, modFiles.Count(), passed, failed, total / count);
 					};
-					label7.BeginInvoke(action);
+					_ = label7.BeginInvoke(action);
 				}
 
 				if (s_StopThread)
@@ -429,8 +429,8 @@ namespace MikModUnitTest
 							byte cByte;
 							byte cSharpByte;
 
-							mikModCReader.BaseStream.Seek(44, SeekOrigin.Begin);
-							m_SharpTest.MemStream.Seek(0, SeekOrigin.Begin);
+							_ = mikModCReader.BaseStream.Seek(44, SeekOrigin.Begin);
+							_ = m_SharpTest.MemStream.Seek(0, SeekOrigin.Begin);
 							var size = cSize - 44;
 							for (long i = 0; i < size; i++)
 							{
@@ -479,9 +479,9 @@ namespace MikModUnitTest
 		}
 
 		static bool s_StopThread;
-		private void Stop_Click(object sender, EventArgs e) => s_StopThread = true;
+		void Stop_Click(object sender, EventArgs e) => s_StopThread = true;
 
-		private void checkBox1_CheckedChanged(object sender, EventArgs e) => UpdateSaveFile();
+		void checkBox1_CheckedChanged(object sender, EventArgs e) => UpdateSaveFile();
 	}
 
 	public class TestResult

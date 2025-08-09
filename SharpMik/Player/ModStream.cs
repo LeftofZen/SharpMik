@@ -1,4 +1,4 @@
-﻿using SharpMik.Common;
+using SharpMik.Common;
 using SharpMik.Drivers;
 using System.IO;
 
@@ -8,14 +8,13 @@ namespace SharpMik.Player
 	{
 		public Module Module { get; }
 
-		private MikMod Player { get; }
-		private readonly PullStreamDriver m_PullStream;
+		MikMod Player { get; }
+		readonly PullStreamDriver m_PullStream;
 
 		public ModStream(Stream toPlay)
 		{
 			Player = new MikMod();
-			var result = false;
-			m_PullStream = Player.Init<PullStreamDriver>("", out result);
+			m_PullStream = Player.Init<PullStreamDriver>("", out _);
 
 			Module = Player.Play(toPlay);
 		}

@@ -1,15 +1,15 @@
-﻿using System.Reflection;
-using System.Linq;
-using SharpMik.Interfaces;
 using SharpMik.Attributes;
+using SharpMik.Interfaces;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 
 namespace SharpMik.Common
 {
 	public static class Helpers
 	{
 
-		private static string[] s_FileTypes;
+		static string[] s_FileTypes;
 
 		public static string[] ModFileExtensions
 		{
@@ -17,24 +17,24 @@ namespace SharpMik.Common
 			{
 				if (s_FileTypes == null)
 				{
-					var extentions = new List<string>();
+					var extensions = new List<string>();
 					var list = Assembly.GetExecutingAssembly().GetTypes().Where(x => x.IsSubclassOf(typeof(IModLoader)));
 
 					foreach (var item in list)
 					{
-						var attributes = item.GetCustomAttributes(typeof(ModFileExtentionsAttribute), false);
+						var attributes = item.GetCustomAttributes(typeof(ModFileExtensionsAttribute), false);
 						foreach (var attribute in attributes)
 						{
-							var modExtention = attribute as ModFileExtentionsAttribute;
+							var modExtension = attribute as ModFileExtensionsAttribute;
 
-							if (modExtention != null)
+							if (modExtension != null)
 							{
-								extentions.AddRange(modExtention.FileExtentions);
+								extensions.AddRange(modExtension.FileExtensions);
 							}
 						}
 					}
 
-					s_FileTypes = extentions.Distinct().ToArray();
+					s_FileTypes = extensions.Distinct().ToArray();
 				}
 
 				return s_FileTypes;

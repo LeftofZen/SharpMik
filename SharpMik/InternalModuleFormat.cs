@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace SharpMik
 {
@@ -139,7 +139,7 @@ namespace SharpMik
 
 				while (t-- != 0)
 				{
-					UniGetByte();
+					_ = UniGetByte();
 				}
 			}
 		}

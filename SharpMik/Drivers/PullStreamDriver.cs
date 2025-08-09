@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 
 namespace SharpMik.Drivers
@@ -6,12 +6,9 @@ namespace SharpMik.Drivers
 
 	public class PullAudioStream : Stream
 	{
-		private readonly PullStreamDriver m_StreamDriver;
+		readonly PullStreamDriver m_StreamDriver;
 
-		public PullAudioStream(PullStreamDriver driver)
-		{
-			m_StreamDriver = driver;
-		}
+		public PullAudioStream(PullStreamDriver driver) => m_StreamDriver = driver;
 
 		public override bool CanRead => m_StreamDriver.IsPlaying;
 
@@ -64,12 +61,12 @@ namespace SharpMik.Drivers
 
 		public PullStreamDriver()
 		{
-			m_Next = null;
-			m_Name = "Pull Audio Stream";
-			m_Version = "1";
-			m_HardVoiceLimit = 0;
-			m_SoftVoiceLimit = 255;
-			m_AutoUpdating = true;
+			NextDriver = null;
+			Name = "Pull Audio Stream";
+			Version = "1";
+			HardVoiceLimit = 0;
+			SoftVoiceLimit = 255;
+			AutoUpdating = true;
 			IsPlaying = false;
 			Stream = new PullAudioStream(this);
 

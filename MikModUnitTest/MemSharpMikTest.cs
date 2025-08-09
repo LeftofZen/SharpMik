@@ -1,32 +1,30 @@
-﻿using System;
-using System.IO;
-using SharpMik.Drivers;
-
-using SharpMik.Extentions;
-using SharpMik.Player;
 using SharpMik;
-using System.Threading;
 using SharpMik.Common;
+using SharpMik.Drivers;
+using SharpMik.Extensions;
+using SharpMik.Player;
+using System;
+using System.IO;
+using System.Threading;
 
 namespace MikModUnitTest
 {
 	public class MemDriver : VirtualSoftwareDriver
 	{
-		MemoryStream m_MemoryStream;
 		sbyte[] m_Audiobuffer;
 
 		public static uint BUFFERSIZE = 32768;
 
-		public MemoryStream MemStream => m_MemoryStream;
+		public MemoryStream MemStream { get; private set; }
 
 		public MemDriver()
 		{
-			m_Next = null;
-			m_Name = "Mem Writer";
-			m_Version = "Mem stream writer";
-			m_HardVoiceLimit = 0;
-			m_SoftVoiceLimit = 255;
-			m_AutoUpdating = false;
+			NextDriver = null;
+			Name = "Mem Writer";
+			Version = "Mem stream writer";
+			HardVoiceLimit = 0;
+			SoftVoiceLimit = 255;
+			AutoUpdating = false;
 		}
 
 		public override void CommandLine(string command)
@@ -46,7 +44,7 @@ namespace MikModUnitTest
 
 		public override bool PlayStart()
 		{
-			m_MemoryStream = new MemoryStream();
+			MemStream = new MemoryStream();
 			return base.PlayStart();
 		}
 
@@ -58,7 +56,7 @@ namespace MikModUnitTest
 		public override void Update()
 		{
 			var done = WriteBytes(m_Audiobuffer, BUFFERSIZE);
-			m_MemoryStream.Write(m_Audiobuffer, 0, (int)done);
+			MemStream.Write(m_Audiobuffer, 0, (int)done);
 		}
 	}
 
@@ -69,26 +67,22 @@ namespace MikModUnitTest
 		Module mod;
 
 		readonly Thread m_Thread;
-		string m_Error;
-
-		float m_TimeTaken;
-
 		bool m_Running;
 		bool m_Working;
 
 		readonly AutoResetEvent m_Blocker = new(false);
 
-		public string ErrorMessage => m_Error;
+		public string ErrorMessage { get; private set; }
 
 		public MemoryStream MemStream => m_MemDriver.MemStream;
 
-		public float TimeTaken => m_TimeTaken;
+		public float TimeTaken { get; private set; }
 
 		public MemSharpMikTest()
 		{
 			ModPlayer.SetFixedRandom = true;
 			m_MemDriver = ModDriver.LoadDriver<MemDriver>();
-			ModDriver.MikMod_Init("");
+			_ = ModDriver.MikMod_Init("");
 			m_Running = true;
 
 			m_Thread = new Thread(new ThreadStart(WorkThread))
@@ -102,16 +96,16 @@ namespace MikModUnitTest
 		public void Start(string fileName)
 		{
 			m_FileName = fileName;
-			m_Error = null;
+			ErrorMessage = null;
 			m_Working = true;
-			m_Blocker.Set();
+			_ = m_Blocker.Set();
 		}
 
 		public void ShutDown()
 		{
 			m_FileName = null;
 			m_Running = false;
-			m_Blocker.Set();
+			_ = m_Blocker.Set();
 			m_Thread.Abort();
 		}
 
@@ -129,7 +123,7 @@ namespace MikModUnitTest
 		{
 			while (m_Running)
 			{
-				m_Blocker.WaitOne();
+				_ = m_Blocker.WaitOne();
 				if (m_FileName != null)
 				{
 					var startTime = DateTime.Now;
@@ -157,11 +151,11 @@ namespace MikModUnitTest
 					}
 					catch (Exception ex)
 					{
-						m_Error = ex.Message;
+						ErrorMessage = ex.Message;
 					}
 
 					var span = DateTime.Now - startTime;
-					m_TimeTaken = (float)span.TotalSeconds;
+					TimeTaken = (float)span.TotalSeconds;
 				}
 
 				m_Working = false;

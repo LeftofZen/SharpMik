@@ -1,13 +1,13 @@
-﻿using System;
 using NAudio.Wave;
 using SharpMik.Common;
 using SharpMik.Player;
+using System;
 
 namespace SharpMik.Drivers
 {
 	class NAudioTrackerStream : WaveStream
 	{
-		private readonly WaveFormat waveFormat;
+		readonly WaveFormat waveFormat;
 		readonly NaudioDriver m_Driver;
 		public NAudioTrackerStream(NaudioDriver driver)
 		{
@@ -42,12 +42,12 @@ namespace SharpMik.Drivers
 
 		public NaudioDriver()
 		{
-			m_Next = null;
-			m_Name = "NAudio Driver";
-			m_Version = "NAudio 1.0";
-			m_HardVoiceLimit = 0;
-			m_SoftVoiceLimit = 255;
-			m_AutoUpdating = true;
+			NextDriver = null;
+			Name = "NAudio Driver";
+			Version = "NAudio 1.0";
+			HardVoiceLimit = 0;
+			SoftVoiceLimit = 255;
+			AutoUpdating = true;
 		}
 
 		public override void CommandLine(string command)

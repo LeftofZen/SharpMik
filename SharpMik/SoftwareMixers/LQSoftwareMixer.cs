@@ -1,7 +1,7 @@
-﻿using System;
-using SharpMik.Player;
-using System.Diagnostics;
 using SharpMik.Common;
+using SharpMik.Player;
+using System;
+using System.Diagnostics;
 
 namespace SharpMik.SoftwareMixers
 {
@@ -26,14 +26,9 @@ namespace SharpMik.SoftwareMixers
 
 		protected override uint WriteSamples(sbyte[] buf, uint todo)
 		{
-			int left, portion = 0, count;
+			int left, count;
 			int t, pan, vol;
-
-			uint bufferPlace = 0;
 			uint bufPlace = 0;
-
-			var total = todo;
-
 			if (todo > buf.Length)
 			{
 				throw new Exception("Asked for more then the dest buffer.");
@@ -53,14 +48,14 @@ namespace SharpMik.SoftwareMixers
 
 				left = (int)Math.Min(m_TickLeft, todo);
 
-				bufferPlace = bufPlace;
+				var bufferPlace = bufPlace;
 				m_TickLeft -= left;
 				todo -= (uint)left;
 				bufPlace += samples2bytes((uint)left);
 
 				while (left != 0)
 				{
-					portion = (int)Math.Min(left, m_SamplesThatFit);
+					var portion = (int)Math.Min(left, m_SamplesThatFit);
 					count = m_IsStereo ? (portion << 1) : portion;
 
 					Array.Clear(m_VcTickBuf, 0, TICKLSIZE);
@@ -271,7 +266,7 @@ namespace SharpMik.SoftwareMixers
 			while (count-- != 0)
 			{
 				/* Compute the left channel echo buffers */
-				speedup = (uint)(m_VcTickBuf[place] >> 3);
+				_ = (uint)(m_VcTickBuf[place] >> 3);
 
 				var side = 0;
 				speedup = (uint)(m_VcTickBuf[place + side] >> 3);
@@ -314,7 +309,7 @@ namespace SharpMik.SoftwareMixers
 			while (count-- != 0)
 			{
 				/* Compute the left channel echo buffers */
-				speedup = (uint)(m_VcTickBuf[place] >> 3);
+				_ = (uint)(m_VcTickBuf[place] >> 3);
 
 				for (var side = 0; side < 2; side++)
 				{

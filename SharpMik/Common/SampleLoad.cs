@@ -1,4 +1,4 @@
-﻿using SharpMik.IO;
+using SharpMik.IO;
 
 namespace SharpMik.Common
 {

@@ -1,4 +1,4 @@
-﻿using SharpMik.Common;
+using SharpMik.Common;
 using SharpMik.Player;
 
 namespace SharpMik.Types
@@ -9,10 +9,7 @@ namespace SharpMik.Types
 		public Module m_Module;
 		public static short[][] m_Samples;
 
-		public BinaryModule()
-		{
-			m_Loaded = false;
-		}
+		public BinaryModule() => m_Loaded = false;
 
 		public BinaryModule(Module mod)
 		{
@@ -36,7 +33,7 @@ namespace SharpMik.Types
 					m_Module.Samples[i].handle = ModDriver.MD_SetSample(m_Samples[i]);
 				}
 
-				ModPlayer.Player_Init(m_Module);
+				_ = ModPlayer.Player_Init(m_Module);
 
 				m_Loaded = true;
 			}

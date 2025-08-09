@@ -1,14 +1,13 @@
-﻿using System;
-
-using SharpMik.Interfaces;
-using SharpMik.Extentions;
-using System.IO;
 using SharpMik.Attributes;
 using SharpMik.Common;
+using SharpMik.Extensions;
+using SharpMik.Interfaces;
+using System;
+using System.IO;
 
 namespace SharpMik.Loaders
 {
-	[ModFileExtentions(".xm")]
+	[ModFileExtensions(".xm")]
 	public class XMLoader : IModLoader
 	{
 		/*========== Module structure */
@@ -409,7 +408,7 @@ namespace SharpMik.Loaders
 				ph.size -= (ushort)(mh.version == 0x0102 ? 8 : 9);
 				if (ph.size != 0)
 				{
-					m_Reader.Seek((int)ph.size, SeekOrigin.Current);
+					_ = m_Reader.Seek((int)ph.size, SeekOrigin.Current);
 				}
 
 				m_Module.PatternRows[t] = ph.numrows;
@@ -446,7 +445,7 @@ namespace SharpMik.Loaders
 
 					if (ph.packsize != 0)
 					{
-						m_Reader.Seek(ph.packsize, SeekOrigin.Current);
+						_ = m_Reader.Seek(ph.packsize, SeekOrigin.Current);
 					}
 
 					if (m_Reader.isEOF())
@@ -516,7 +515,7 @@ namespace SharpMik.Loaders
 						else
 						{
 							int temp = cur[place].pos;
-							temp = temp | ((prev.pos + 0x100) & 0xff00);
+							temp |= (prev.pos + 0x100) & 0xff00;
 							tmp = temp;
 						}
 
@@ -646,15 +645,15 @@ namespace SharpMik.Loaders
 				ih.size = m_Reader.Read_Intel_uint();
 				headend += ih.size;
 				ck = m_Reader.Tell();
-				m_Reader.Seek(0, SeekOrigin.End);
+				_ = m_Reader.Seek(0, SeekOrigin.End);
 
 				if ((headend < 0) || (m_Reader.Tell() < headend) || (headend < ck))
 				{
-					m_Reader.Seek(ck, SeekOrigin.Begin);
+					_ = m_Reader.Seek(ck, SeekOrigin.Begin);
 					break;
 				}
 
-				m_Reader.Seek(ck, SeekOrigin.Begin);
+				_ = m_Reader.Seek(ck, SeekOrigin.Begin);
 
 				ih.name = m_Reader.Read_String(22);
 				ih.type = m_Reader.Read_byte();
@@ -668,9 +667,9 @@ namespace SharpMik.Loaders
 					if (((short)ih.NumSamples > 0) && (ih.NumSamples <= XMNOTECNT))
 					{
 						var pth = new XMPATCHHEADER();
-						m_Reader.Read_bytes(pth.what, XMNOTECNT);
-						m_Reader.Read_Intel_ushorts(pth.volenv, XMENVCNT);
-						m_Reader.Read_Intel_ushorts(pth.panenv, XMENVCNT);
+						_ = m_Reader.Read_bytes(pth.what, XMNOTECNT);
+						_ = m_Reader.Read_Intel_ushorts(pth.volenv, XMENVCNT);
+						_ = m_Reader.Read_Intel_ushorts(pth.panenv, XMENVCNT);
 						pth.volpts = m_Reader.Read_byte();
 						pth.panpts = m_Reader.Read_byte();
 						pth.volsus = m_Reader.Read_byte();
@@ -693,7 +692,7 @@ namespace SharpMik.Loaders
 						{
 							for (u = (int)(headend - m_Reader.Tell()); u != 0; u--)
 							{
-								m_Reader.Read_byte();
+								_ = m_Reader.Read_byte();
 							}
 						}
 
@@ -832,7 +831,7 @@ namespace SharpMik.Loaders
 								nextwav[m_Module.NumSamples++] += (uint)m_Reader.Tell();
 							}
 
-							m_Reader.Seek((int)next, SeekOrigin.Current);
+							_ = m_Reader.Seek((int)next, SeekOrigin.Current);
 						}
 						else
 						{
@@ -843,20 +842,20 @@ namespace SharpMik.Loaders
 					{
 						/* read the remainder of the header */
 						ck = m_Reader.Tell();
-						m_Reader.Seek(0, SeekOrigin.End);
+						_ = m_Reader.Seek(0, SeekOrigin.End);
 
 						if ((headend < 0) || (m_Reader.Tell() < headend) || (headend < ck))
 						{
-							m_Reader.Seek(ck, SeekOrigin.Begin);
+							_ = m_Reader.Seek(ck, SeekOrigin.Begin);
 							break;
 						}
 
-						m_Reader.Seek(ck, SeekOrigin.Begin);
+						_ = m_Reader.Seek(ck, SeekOrigin.Begin);
 
 						u = (int)(headend - m_Reader.Tell());
 						for (; u != 0; u--)
 						{
-							m_Reader.Read_byte();
+							_ = m_Reader.Read_byte();
 						}
 
 						if (m_Reader.isEOF())
@@ -888,7 +887,7 @@ namespace SharpMik.Loaders
 			Sample q;
 			int t, u;
 			var dummypat = false;
-			var tracker = new char[21];
+			_ = new char[21];
 			//char[] ModType = new char[60];
 
 			/* try to read module header */
@@ -919,7 +918,7 @@ namespace SharpMik.Loaders
 				return false;
 			}
 
-			m_Reader.Read_bytes(mh.orders, mh.songlength);
+			_ = m_Reader.Read_bytes(mh.orders, mh.songlength);
 			if (!m_Reader.Seek((int)(mh.headersize + 60), SeekOrigin.Begin) || m_Reader.isEOF())
 			{
 				m_LoadError = MMERR_LOADING_HEADER;
@@ -930,7 +929,7 @@ namespace SharpMik.Loaders
 			m_Module.InitialSpeed = (byte)mh.tempo;
 			m_Module.InitialTempo = mh.bpm;
 
-			tracker = mh.trackername.ToCharArray();
+			var tracker = mh.trackername.ToCharArray();
 			for (t = tracker.Length - 1; (t >= 0) && (tracker[t] <= ' '); t--)
 			{
 				tracker[t] = (char)0;

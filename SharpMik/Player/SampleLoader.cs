@@ -1,11 +1,11 @@
-﻿using System;
-using System.IO;
 using SharpMik.Common;
 using SharpMik.IO;
+using System;
+using System.IO;
 
 namespace SharpMik.Player
 {
-	class SampleLoader
+	static class SampleLoader
 	{
 		static int sl_rlength;
 		static short sl_old;
@@ -27,10 +27,7 @@ namespace SharpMik.Player
 
 		public static bool SL_Init(SampleLoad s)
 		{
-			if (sl_buffer == null)
-			{
-				sl_buffer = new short[SLBUFSIZE];
-			}
+			sl_buffer ??= new short[SLBUFSIZE];
 
 			sl_rlength = (int)s.length;
 			if ((s.infmt & Constants.SF_16BITS) == Constants.SF_16BITS)
@@ -47,7 +44,7 @@ namespace SharpMik.Player
 		{
 			if (sl_rlength > 0)
 			{
-				s.reader.Seek(sl_rlength, SeekOrigin.Current);
+				_ = s.reader.Seek(sl_rlength, SeekOrigin.Current);
 			}
 
 			if (sl_buffer != null)
@@ -131,11 +128,11 @@ namespace SharpMik.Player
 					{
 						if ((infmt & Constants.SF_BIG_ENDIAN) == Constants.SF_BIG_ENDIAN)
 						{
-							reader.read_Motorola_shorts(sl_buffer, stodo);
+							_ = reader.read_Motorola_shorts(sl_buffer, stodo);
 						}
 						else
 						{
-							reader.read_Intel_shorts(sl_buffer, stodo);
+							_ = reader.read_Intel_shorts(sl_buffer, stodo);
 						}
 					}
 					else
@@ -149,7 +146,7 @@ namespace SharpMik.Player
 							read = (int)left;
 						}
 
-						reader.Read_bytes(bufff, read);
+						_ = reader.Read_bytes(bufff, read);
 
 						if (read != stodo)
 						{
@@ -504,7 +501,6 @@ namespace SharpMik.Player
 
 		public static bool SL_LoadSamples()
 		{
-			var ok = true;
 
 			//_mm_critical = 0;
 
@@ -513,7 +509,7 @@ namespace SharpMik.Player
 				return false;
 			}
 
-			ok = DitherSamples(musiclist, (int)MDTypes.MD_MUSIC) || DitherSamples(sndfxlist, (int)MDTypes.MD_SNDFX);
+			var ok = DitherSamples(musiclist, (int)MDTypes.MD_MUSIC) || DitherSamples(sndfxlist, (int)MDTypes.MD_SNDFX);
 
 			musiclist = null;
 			sndfxlist = null;
@@ -609,8 +605,7 @@ namespace SharpMik.Player
 		public static SampleLoad SL_RegisterSample(Sample s, int type, ModuleReader reader)
 		{
 			SampleLoad news;
-			SampleLoad cruise = null;
-
+			SampleLoad cruise;
 			if (type == (int)MDTypes.MD_MUSIC)
 			{
 				cruise = musiclist;

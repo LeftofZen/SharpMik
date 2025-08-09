@@ -1,12 +1,12 @@
-﻿using System;
-using SharpMik.Interfaces;
-using System.IO;
 using SharpMik.Attributes;
 using SharpMik.Common;
+using SharpMik.Interfaces;
+using System;
+using System.IO;
 
 namespace SharpMik.Loaders
 {
-	[ModFileExtentions(".med")]
+	[ModFileExtensions(".med")]
 	public class MEDLoader : IModLoader
 	{
 
@@ -358,7 +358,7 @@ namespace SharpMik.Loaders
 			/* first, scan patterns to see how many channels are used */
 			for (t = 0; t < m_Module.NumPatterns; t++)
 			{
-				m_Reader.Seek((int)ba[t], SeekOrigin.Begin);
+				_ = m_Reader.Seek((int)ba[t], SeekOrigin.Begin);
 
 				numtracks = m_Reader.Read_byte();
 				numlines = m_Reader.Read_byte();
@@ -387,7 +387,7 @@ namespace SharpMik.Loaders
 			/* second read: read and convert patterns */
 			for (t = 0; t < m_Module.NumPatterns; t++)
 			{
-				m_Reader.Seek((int)ba[t], SeekOrigin.Begin);
+				_ = m_Reader.Seek((int)ba[t], SeekOrigin.Begin);
 				numtracks = m_Reader.Read_byte();
 				numlines = m_Reader.Read_byte();
 
@@ -428,7 +428,7 @@ namespace SharpMik.Loaders
 			/* first, scan patterns to see how many channels are used */
 			for (t = 0; t < m_Module.NumPatterns; t++)
 			{
-				m_Reader.Seek((int)ba[t], SeekOrigin.Begin);
+				_ = m_Reader.Seek((int)ba[t], SeekOrigin.Begin);
 				numtracks = m_Reader.Read_Motorola_ushort();
 				numlines = m_Reader.Read_Motorola_ushort();
 				if (numtracks > m_Module.NumChannels)
@@ -456,10 +456,10 @@ namespace SharpMik.Loaders
 			/* second read: really read and convert patterns */
 			for (t = 0; t < m_Module.NumPatterns; t++)
 			{
-				m_Reader.Seek((int)ba[t], SeekOrigin.Begin);
+				_ = m_Reader.Seek((int)ba[t], SeekOrigin.Begin);
 				numtracks = m_Reader.Read_Motorola_ushort();
 				numlines = m_Reader.Read_Motorola_ushort();
-				m_Reader.Seek(sizeof(uint), SeekOrigin.Current);
+				_ = m_Reader.Seek(sizeof(uint), SeekOrigin.Current);
 
 				m_Module.PatternRows[t] = ++numlines;
 				var place = 0;
@@ -519,7 +519,7 @@ namespace SharpMik.Loaders
 			mh.extra_songs = m_Reader.Read_byte();
 
 			/* Seek to MEDSONG struct */
-			m_Reader.Seek((int)mh.MEDSONGP, SeekOrigin.Begin);
+			_ = m_Reader.Seek((int)mh.MEDSONGP, SeekOrigin.Begin);
 
 			/* Load the MED Song Header */
 			//mss = ms.sample;			/* load the sample data first */
@@ -539,13 +539,13 @@ namespace SharpMik.Loaders
 
 			ms.numblocks = m_Reader.Read_Motorola_ushort();
 			ms.songlen = m_Reader.Read_Motorola_ushort();
-			m_Reader.Read_bytes(ms.playseq, 256);
+			_ = m_Reader.Read_bytes(ms.playseq, 256);
 			ms.deftempo = m_Reader.Read_Motorola_ushort();
 			ms.playtransp = m_Reader.Read_sbyte();
 			ms.flags = m_Reader.Read_byte();
 			ms.flags2 = m_Reader.Read_byte();
 			ms.tempo2 = m_Reader.Read_byte();
-			m_Reader.Read_bytes(ms.trkvol, 16);
+			_ = m_Reader.Read_bytes(ms.trkvol, 16);
 			ms.mastervol = m_Reader.Read_byte();
 			ms.numsamples = m_Reader.Read_byte();
 
@@ -560,7 +560,7 @@ namespace SharpMik.Loaders
 			/* load extension structure */
 			if (mh.MEDEXPP != 0)
 			{
-				m_Reader.Seek((int)mh.MEDEXPP, SeekOrigin.Begin);
+				_ = m_Reader.Seek((int)mh.MEDEXPP, SeekOrigin.Begin);
 				me.nextmod = m_Reader.Read_Motorola_uint();
 				me.exp_smp = m_Reader.Read_Motorola_uint();
 				me.s_ext_entries = m_Reader.Read_Motorola_ushort();
@@ -580,13 +580,13 @@ namespace SharpMik.Loaders
 			}
 
 			/* seek to and read the samplepointer array */
-			m_Reader.Seek((int)mh.MEDINSTHEADERPP, SeekOrigin.Begin);
-			m_Reader.Read_Motorola_uints(sa, ms.numsamples);
+			_ = m_Reader.Seek((int)mh.MEDINSTHEADERPP, SeekOrigin.Begin);
+			_ = m_Reader.Read_Motorola_uints(sa, ms.numsamples);
 
 			/* alloc and read the blockpointer array */
 			ba = new uint[ms.numblocks];
-			m_Reader.Seek((int)mh.MEDBlockPP, SeekOrigin.Begin);
-			m_Reader.Read_Motorola_uints(ba, ms.numblocks);
+			_ = m_Reader.Seek((int)mh.MEDBlockPP, SeekOrigin.Begin);
+			_ = m_Reader.Read_Motorola_uints(ba, ms.numblocks);
 
 			/* copy song positions */
 			m_Module.Positions = new ushort[ms.songlen];
@@ -659,7 +659,7 @@ namespace SharpMik.Loaders
 			m_Module.RestartPosition = 0;
 			if ((mh.MEDEXPP != 0) && (me.SongName != 0) && (me.songnamelen != 0))
 			{
-				m_Reader.Seek((int)me.SongName, SeekOrigin.Begin);
+				_ = m_Reader.Seek((int)me.SongName, SeekOrigin.Begin);
 				m_Module.SongName = m_Reader.Read_String((int)me.songnamelen);
 			}
 			else
@@ -669,8 +669,8 @@ namespace SharpMik.Loaders
 
 			if ((mh.MEDEXPP != 0) && (me.annotxt != 0) && (me.annolen != 0))
 			{
-				m_Reader.Seek((int)me.annotxt, SeekOrigin.Begin);
-				ReadComment((ushort)me.annolen);
+				_ = m_Reader.Seek((int)me.annotxt, SeekOrigin.Begin);
+				_ = ReadComment((ushort)me.annolen);
 			}
 
 			m_Module.AllocSamples();
@@ -682,7 +682,7 @@ namespace SharpMik.Loaders
 				q.volume = 64;
 				if (sa[t] != 0)
 				{
-					m_Reader.Seek((int)sa[t], SeekOrigin.Begin);
+					_ = m_Reader.Seek((int)sa[t], SeekOrigin.Begin);
 
 					s.length = m_Reader.Read_Motorola_uint();
 					s.type = m_Reader.Read_Motorola_short();
@@ -729,7 +729,7 @@ namespace SharpMik.Loaders
 				if ((mh.MEDEXPP != 0) && (me.exp_smp != 0) && (t < me.s_ext_entries) && (me.s_ext_entrsz >= 4))
 				{
 					var ie = new MEDINSTEXT();
-					m_Reader.Seek((int)(me.exp_smp + (t * me.s_ext_entrsz)), SeekOrigin.Begin);
+					_ = m_Reader.Seek((int)(me.exp_smp + (t * me.s_ext_entrsz)), SeekOrigin.Begin);
 					ie.hold = m_Reader.Read_byte();
 					ie.decay = m_Reader.Read_byte();
 					ie.suppress_midi_off = m_Reader.Read_byte();
@@ -744,7 +744,7 @@ namespace SharpMik.Loaders
 
 				if ((mh.MEDEXPP != 0) && (me.iinfo != 0) && (t < me.i_ext_entries) && (me.i_ext_entrsz >= 40))
 				{
-					m_Reader.Seek((int)(me.iinfo + (t * me.i_ext_entrsz)), SeekOrigin.Begin);
+					_ = m_Reader.Seek((int)(me.iinfo + (t * me.i_ext_entrsz)), SeekOrigin.Begin);
 					q.samplename = m_Reader.Read_String(40);
 				}
 				else

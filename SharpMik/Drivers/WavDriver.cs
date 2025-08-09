@@ -1,36 +1,36 @@
-﻿using System.IO;
-using SharpMik.Player;
-using SharpMik.Extentions;
 using SharpMik.Common;
+using SharpMik.Extensions;
+using SharpMik.Player;
+using System.IO;
 
 namespace SharpMik.Drivers
 {
 	public class WavDriver : VirtualSoftwareDriver
 	{
-		BinaryWriter m_FileStream;
+		BinaryWriter fileStream;
 
-		string m_FileName = "music.wav";
+		string fileName = "music.wav";
 
-		sbyte[] m_Audiobuffer;
+		sbyte[] audiobuffer;
 
 		public static uint BUFFERSIZE = 32768;
 		uint dumpsize;
 
 		public WavDriver()
 		{
-			m_Next = null;
-			m_Name = "Disk Wav Writer";
-			m_Version = "Wav disk writer (music.wav) v1.0";
-			m_HardVoiceLimit = 0;
-			m_SoftVoiceLimit = 255;
-			m_AutoUpdating = false;
+			NextDriver = null;
+			Name = "Disk Wav Writer";
+			Version = "Wav disk writer (music.wav) v1.0";
+			HardVoiceLimit = 0;
+			SoftVoiceLimit = 255;
+			AutoUpdating = false;
 		}
 
 		public override void CommandLine(string command)
 		{
 			if (!string.IsNullOrEmpty(command))
 			{
-				m_FileName = command;
+				fileName = command;
 			}
 		}
 
@@ -38,55 +38,55 @@ namespace SharpMik.Drivers
 
 		public override bool Init()
 		{
-			var stream = new FileStream(m_FileName, FileMode.Create);
-			m_FileStream = new BinaryWriter(stream);
-			m_Audiobuffer = new sbyte[BUFFERSIZE];
+			var stream = new FileStream(fileName, FileMode.Create);
+			fileStream = new BinaryWriter(stream);
+			audiobuffer = new sbyte[BUFFERSIZE];
 
 			ModDriver.Mode = (ushort)(ModDriver.Mode | Constants.DMODE_SOFT_MUSIC | Constants.DMODE_SOFT_SNDFX);
 
-			putheader();
+			PutHeader();
 			return base.Init();
 		}
 
 		public override void Exit()
 		{
-			putheader();
+			PutHeader();
 			base.Exit();
 			//putheader();
-			m_FileStream.Close();
-			m_FileStream.Dispose();
-			m_FileStream = null;
+			fileStream.Close();
+			fileStream.Dispose();
+			fileStream = null;
 		}
 
 		int loc;
 
 		public override void Update()
 		{
-			var done = WriteBytes(m_Audiobuffer, BUFFERSIZE);
-			m_FileStream.Write(m_Audiobuffer, 0, (int)done);
+			var done = WriteBytes(audiobuffer, BUFFERSIZE);
+			fileStream.Write(audiobuffer, 0, (int)done);
 			dumpsize += done;
 			loc++;
 		}
 
-		void putheader()
+		void PutHeader()
 		{
-			m_FileStream.Seek(0, SeekOrigin.Begin);
-			m_FileStream.Write("RIFF".ToCharArray());
-			m_FileStream.Write(dumpsize + 44);
-			m_FileStream.Write("WAVEfmt ".ToCharArray());
-			m_FileStream.Write((uint)16);
-			m_FileStream.Write((ushort)1);
+			_ = fileStream.Seek(0, SeekOrigin.Begin);
+			fileStream.Write("RIFF".ToCharArray());
+			fileStream.Write(dumpsize + 44);
+			fileStream.Write("WAVEfmt ".ToCharArray());
+			fileStream.Write((uint)16);
+			fileStream.Write((ushort)1);
 			var channelCount = (ushort)((ModDriver.Mode & Constants.DMODE_STEREO) == Constants.DMODE_STEREO ? 2 : 1);
 			var numberOfBytes = (ushort)((ModDriver.Mode & Constants.DMODE_16BITS) == Constants.DMODE_16BITS ? 2 : 1);
 
-			m_FileStream.Write(channelCount);
-			m_FileStream.Write((uint)ModDriver.MixFrequency);
+			fileStream.Write(channelCount);
+			fileStream.Write((uint)ModDriver.MixFrequency);
 			var blah = ModDriver.MixFrequency * channelCount * numberOfBytes;
-			m_FileStream.Write((uint)blah);
-			m_FileStream.Write((ushort)(channelCount * numberOfBytes));
-			m_FileStream.Write((ushort)((ModDriver.Mode & Constants.DMODE_16BITS) == Constants.DMODE_16BITS ? 16 : 8));
-			m_FileStream.Write("data".ToCharArray());
-			m_FileStream.Write(dumpsize);
+			fileStream.Write((uint)blah);
+			fileStream.Write((ushort)(channelCount * numberOfBytes));
+			fileStream.Write((ushort)((ModDriver.Mode & Constants.DMODE_16BITS) == Constants.DMODE_16BITS ? 16 : 8));
+			fileStream.Write("data".ToCharArray());
+			fileStream.Write(dumpsize);
 		}
 	}
 }

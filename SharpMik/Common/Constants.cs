@@ -1,4 +1,4 @@
-﻿namespace SharpMik.Common
+namespace SharpMik.Common
 {
 	public static class Constants
 	{
@@ -127,6 +127,8 @@
 		public const int SF_UST_LOOP = 0x2000;
 
 		public const int SF_EXTRAPLAYBACKMASK = 0x3000;
+
+		public const int MAXSAMPLEHANDLES = 1024; // missing in the original SharpMik repo
 
 		public static short[] Npertab =
 		[

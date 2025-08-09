@@ -1,12 +1,12 @@
-﻿using System;
-using SharpMik.Interfaces;
-using System.IO;
 using SharpMik.Attributes;
 using SharpMik.Common;
+using SharpMik.Interfaces;
+using System;
+using System.IO;
 
 namespace SharpMik.Loaders
 {
-	[ModFileExtentions(".mod")]
+	[ModFileExtensions(".mod")]
 	public class ModLoader : IModLoader
 	{
 		#region sub Classes
@@ -89,7 +89,7 @@ namespace SharpMik.Loaders
 			byte numberOfChannels = 0;
 			var description = "";
 
-			m_Reader.Seek(MODULEHEADERSIZE - 4, SeekOrigin.Begin);
+			_ = m_Reader.Seek(MODULEHEADERSIZE - 4, SeekOrigin.Begin);
 
 			if (m_Reader.Read(id, 0, 4) != 4)
 			{
@@ -108,7 +108,7 @@ namespace SharpMik.Loaders
 
 		public override string LoadTitle()
 		{
-			m_Reader.Seek(0, SeekOrigin.Begin);
+			_ = m_Reader.Seek(0, SeekOrigin.Begin);
 			var title = m_Reader.Read_String(20);
 
 			return title;
@@ -235,8 +235,8 @@ namespace SharpMik.Loaders
 			}
 
 			mh.magic1 = m_Reader.Read_byte();
-			m_Reader.Read_bytes(mh.positions, 128);
-			m_Reader.Read_bytes(mh.magic2, 4);
+			_ = m_Reader.Read_bytes(mh.positions, 128);
+			_ = m_Reader.Read_bytes(mh.magic2, 4);
 
 			if (m_Reader.isEOF())
 			{
@@ -549,7 +549,6 @@ namespace SharpMik.Loaders
 			if (note != 0)
 			{
 				UniNote(note + (2 * Constants.Octave) - 1);
-				lastnote = note;
 			}
 
 			/* Convert pattern jump from Dec to Hex */

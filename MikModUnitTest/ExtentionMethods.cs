@@ -1,13 +1,13 @@
-﻿using System;
+using System;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Windows.Forms;
 
 namespace MikModUnitTest
 {
-	public static class UnitTestExtentionMethods
+	public static class UnitTestExtensionMethods
 	{
-		private delegate void SetPropertyThreadSafeDelegate<TResult>(Control @this, Expression<Func<TResult>> property, TResult value);
+		delegate void SetPropertyThreadSafeDelegate<TResult>(Control @this, Expression<Func<TResult>> property, TResult value);
 
 		public static void SetPropertyThreadSafe<TResult>(this Control @this, Expression<Func<TResult>> property, TResult value)
 		{
@@ -22,11 +22,11 @@ namespace MikModUnitTest
 
 			if (@this.InvokeRequired)
 			{
-				@this.Invoke(new SetPropertyThreadSafeDelegate<TResult>(SetPropertyThreadSafe), [@this, property, value]);
+				_ = @this.Invoke(new SetPropertyThreadSafeDelegate<TResult>(SetPropertyThreadSafe), [@this, property, value]);
 			}
 			else
 			{
-				@this.GetType().InvokeMember(propertyInfo.Name, BindingFlags.SetProperty, null, @this, [value]);
+				_ = @this.GetType().InvokeMember(propertyInfo.Name, BindingFlags.SetProperty, null, @this, [value]);
 			}
 		}
 	}

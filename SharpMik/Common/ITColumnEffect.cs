@@ -1,4 +1,4 @@
-﻿namespace SharpMik.Common
+namespace SharpMik.Common
 {
 	/* IT Volume column effects */
 	public enum ITColumnEffect

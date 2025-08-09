@@ -1,4 +1,4 @@
-﻿namespace SharpMik.Common
+namespace SharpMik.Common
 {
 	public class Module
 	{
@@ -42,8 +42,8 @@
 		public bool Loop { get; set; }        /* allow module to loop ? (default enabled) */
 		public bool Fadeout { get; set; }     /* volume fade out during last pattern */
 
-		public ushort PatternRowNumber { get; set; }      /* current row number */
-		public short SongPosition { get; set; }      /* current song position */
+		public ushort Playback_PatternRowNumber { get; set; }      /* current row number */
+		public short Playback_SongPosition { get; set; }      /* current song position */
 		public uint SongTime { get; set; }     /* current song time in 2^-10 seconds */
 
 		public short RelativeSpeedFactor { get; set; }      /* relative speed factor */

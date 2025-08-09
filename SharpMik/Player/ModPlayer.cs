@@ -1,4 +1,4 @@
-﻿using SharpMik.Common;
+using SharpMik.Common;
 using System;
 
 namespace SharpMik.Player
@@ -15,8 +15,6 @@ namespace SharpMik.Player
 		const int HIGH_OCTAVE = 2; /* number of above-range octaves */
 		const ushort LOGFAC = 2 * 16;
 
-		internal static Module s_Module;
-
 		delegate int effectDelegate(ushort tick, ushort flags, MpControl a, Module mod, short channel);
 
 		public enum PlayerState
@@ -30,7 +28,7 @@ namespace SharpMik.Player
 
 		public static event PlayerStateChangedEvent PlayStateChangedHandle;
 
-		public static Module mod => s_Module;
+		public static Module s_Module { get; internal set; }
 
 		public static bool SetFixedRandom { get; set; }
 
@@ -293,7 +291,7 @@ namespace SharpMik.Player
 			{
 				if (dat == 0 && (flags & Constants.UF_ARPMEM) == Constants.UF_ARPMEM)
 				{
-					dat = a.arpmem;
+					_ = a.arpmem;
 				}
 				else
 				{
@@ -660,7 +658,7 @@ namespace SharpMik.Player
 				DoVibrato(tick, a);
 			}
 
-			DoPTEffectA(tick, flags, a, mod, channel);
+			_ = DoPTEffectA(tick, flags, a, mod, channel);
 
 			return 0;
 		}
@@ -675,15 +673,15 @@ namespace SharpMik.Player
 			}
 
 			/* Vincent Voois uses a nasty trick in "Universal Bolero" */
-			if (dat == mod.SongPosition && mod.PatternNewStartPosition == mod.PatternRowNumber)
+			if (dat == mod.Playback_SongPosition && mod.PatternNewStartPosition == mod.Playback_PatternRowNumber)
 			{
 				return 0;
 			}
 
 			if (!mod.Loop && mod.PatternNewStartPosition == 0 &&
-				(dat < mod.SongPosition ||
-					(mod.SongPosition == (mod.NumPositions - 1) && mod.PatternNewStartPosition == 0) ||
-					(dat == mod.SongPosition && (flags & Constants.UF_NOWRAP) == Constants.UF_NOWRAP)
+				(dat < mod.Playback_SongPosition ||
+					(mod.Playback_SongPosition == (mod.NumPositions - 1) && mod.PatternNewStartPosition == 0) ||
+					(dat == mod.Playback_SongPosition && (flags & Constants.UF_NOWRAP) == Constants.UF_NOWRAP)
 				))
 			{
 				/* if we don't loop, better not to skip the end of the
@@ -694,14 +692,14 @@ namespace SharpMik.Player
 			else
 			{
 				/* if we were fading, adjust... */
-				if (mod.SongPosition == (mod.NumPositions - 1))
+				if (mod.Playback_SongPosition == (mod.NumPositions - 1))
 				{
 					mod.Volume = (short)(mod.InitialVolume > 128 ? 128 : mod.InitialVolume);
 				}
 
-				mod.SongPosition = dat;
+				mod.Playback_SongPosition = dat;
 				mod.PositionJumpFlag = 2;
-				mod.PatternRowNumber = 0;
+				mod.Playback_PatternRowNumber = 0;
 
 				if ((flags & Constants.UF_FT2QUIRKS) == Constants.UF_FT2QUIRKS)
 				{
@@ -743,9 +741,9 @@ namespace SharpMik.Player
 				return 0;
 			}
 
-			if ((mod.Positions[mod.SongPosition] != Constants.LAST_PATTERN) && (dat > mod.PatternRows[mod.Positions[mod.SongPosition]]))
+			if ((mod.Positions[mod.Playback_SongPosition] != Constants.LAST_PATTERN) && (dat > mod.PatternRows[mod.Positions[mod.Playback_SongPosition]]))
 			{
-				dat = (byte)mod.PatternRows[mod.Positions[mod.SongPosition]];
+				dat = (byte)mod.PatternRows[mod.Positions[mod.Playback_SongPosition]];
 			}
 
 			mod.PatternNewStartPosition = dat;
@@ -756,11 +754,11 @@ namespace SharpMik.Player
 				   correctly, among others. Take that for granted, or write
 				   the page of comments yourself... you might need some
 				   aspirin - Miod */
-				if ((mod.SongPosition == mod.NumPositions - 1) && (dat != 0) && (mod.Loop ||
-							   (mod.Positions[mod.SongPosition] == (mod.NumPatterns - 1)
+				if ((mod.Playback_SongPosition == mod.NumPositions - 1) && (dat != 0) && (mod.Loop ||
+							   (mod.Positions[mod.Playback_SongPosition] == (mod.NumPatterns - 1)
 								&& (flags & Constants.UF_NOWRAP) != Constants.UF_NOWRAP)))
 				{
-					mod.SongPosition = 0;
+					mod.Playback_SongPosition = 0;
 					mod.PositionJumpFlag = 2;
 				}
 				else
@@ -853,17 +851,17 @@ namespace SharpMik.Player
 						{ /* jump to reppos if repcnt>0 */
 							if (a.pat_reppos == Constants.POS_NONE)
 							{
-								a.pat_reppos = (short)(mod.PatternRowNumber - 1);
+								a.pat_reppos = (short)(mod.Playback_PatternRowNumber - 1);
 							}
 
 							if (a.pat_reppos == -1)
 							{
 								mod.pat_repcrazy = 1;
-								mod.PatternRowNumber = 0;
+								mod.Playback_PatternRowNumber = 0;
 							}
 							else
 							{
-								mod.PatternRowNumber = (ushort)a.pat_reppos;
+								mod.Playback_PatternRowNumber = (ushort)a.pat_reppos;
 							}
 						}
 						else
@@ -873,14 +871,14 @@ namespace SharpMik.Player
 					}
 					else
 					{
-						a.pat_reppos = (short)(mod.PatternRowNumber - 1); /* set reppos - can be (-1) */
+						a.pat_reppos = (short)(mod.Playback_PatternRowNumber - 1); /* set reppos - can be (-1) */
 
 						/* emulate the FT2 pattern loop (E60) bug:
 						 * http://milkytracker.org/docs/MilkyTracker.html#fxE6x
 						 * roadblas.xm plays correctly with this. */
 						if ((flags & Constants.UF_FT2QUIRKS) == Constants.UF_FT2QUIRKS)
 						{
-							mod.PatternNewStartPosition = mod.PatternRowNumber;
+							mod.PatternNewStartPosition = mod.Playback_PatternRowNumber;
 						}
 					}
 
@@ -2546,7 +2544,7 @@ namespace SharpMik.Player
 			{
 				if (dat == 0 && (flags & Constants.UF_ARPMEM) == Constants.UF_ARPMEM)
 				{
-					dat = a.arpmem;
+					_ = a.arpmem;
 				}
 				else
 				{
@@ -2773,7 +2771,7 @@ namespace SharpMik.Player
 
 			if (!ModDriver.MikMod_Active())
 			{
-				ModDriver.MikMod_EnableOutput();
+				_ = ModDriver.MikMod_EnableOutput();
 			}
 
 			mod.Forbid = false;
@@ -3015,7 +3013,7 @@ namespace SharpMik.Player
 
 				s_Module.PositionJumpFlag = 2;
 				s_Module.PatternNewStartPosition = 0;
-				s_Module.SongPosition = (short)pos;
+				s_Module.Playback_SongPosition = (short)pos;
 				s_Module.vbtick = s_Module.SongSpeed;
 
 				for (t = 0; t < NumberOfVoices(s_Module); t++)
@@ -3085,7 +3083,7 @@ namespace SharpMik.Player
 			mod.SongRemainder = 0;
 
 			mod.pat_repcrazy = 0;
-			mod.SongPosition = 0;
+			mod.Playback_SongPosition = 0;
 
 			if (mod.InitialSpeed != 0)
 			{
@@ -3104,7 +3102,7 @@ namespace SharpMik.Player
 			mod.bpm = (ushort)(mod.InitialTempo < 32 ? 32 : mod.InitialTempo);
 			mod.RealChannels = 0;
 
-			mod.PatternRowNumber = 0;
+			mod.Playback_PatternRowNumber = 0;
 			mod.PositionJumpFlag = 2; /* make sure the player fetches the first note */
 			mod.NumRowsOnCurrentPattern = ushort.MaxValue;
 			mod.PatternNewStartPosition = 0;
@@ -3116,7 +3114,7 @@ namespace SharpMik.Player
 
 			if (s_Module != null)
 			{
-				result = s_Module.SongPosition < s_Module.NumPositions;
+				result = s_Module.Playback_SongPosition < s_Module.NumPositions;
 			}
 
 			return result;
@@ -3196,7 +3194,7 @@ namespace SharpMik.Player
 			short channel;
 			int max_volume;
 
-			if (s_Module != null && s_Module.SongPosition >= s_Module.NumPositions)
+			if (s_Module != null && s_Module.Playback_SongPosition >= s_Module.NumPositions)
 			{
 				Player_Stop();
 
@@ -3205,7 +3203,7 @@ namespace SharpMik.Player
 				return;
 			}
 
-			if ((s_Module?.Forbid != false) || (s_Module.SongPosition >= s_Module.NumPositions))
+			if ((s_Module?.Forbid != false) || (s_Module.Playback_SongPosition >= s_Module.NumPositions))
 			{
 				//ModDriver.isplaying = false;
 				return;
@@ -3226,7 +3224,7 @@ namespace SharpMik.Player
 				}
 				else
 				{
-					s_Module.PatternRowNumber++;
+					s_Module.Playback_PatternRowNumber++;
 				}
 
 				s_Module.vbtick = 0;
@@ -3245,25 +3243,25 @@ namespace SharpMik.Player
 					if (--s_Module.PatternDelayCounter2 != 0)
 					{
 						/* so turn back s_Module.patpos by 1 */
-						if (s_Module.PatternRowNumber != 0)
+						if (s_Module.Playback_PatternRowNumber != 0)
 						{
-							s_Module.PatternRowNumber--;
+							s_Module.Playback_PatternRowNumber--;
 						}
 					}
 				}
 
 				/* do we have to get a new patternpointer ? (when s_Module.patpos reaches the
 				   pattern size, or when a patternbreak is active) */
-				if ((s_Module.PatternRowNumber >= s_Module.NumRowsOnCurrentPattern) && (s_Module.NumRowsOnCurrentPattern > 0) && (s_Module.PositionJumpFlag == 0))
+				if ((s_Module.Playback_PatternRowNumber >= s_Module.NumRowsOnCurrentPattern) && (s_Module.NumRowsOnCurrentPattern > 0) && (s_Module.PositionJumpFlag == 0))
 				{
 					s_Module.PositionJumpFlag = 3;
 				}
 
 				if (s_Module.PositionJumpFlag != 0)
 				{
-					s_Module.PatternRowNumber = (ushort)(s_Module.NumRowsOnCurrentPattern != 0 ? (s_Module.PatternNewStartPosition % s_Module.NumRowsOnCurrentPattern) : 0);
+					s_Module.Playback_PatternRowNumber = (ushort)(s_Module.NumRowsOnCurrentPattern != 0 ? (s_Module.PatternNewStartPosition % s_Module.NumRowsOnCurrentPattern) : 0);
 					s_Module.pat_repcrazy = 0;
-					s_Module.SongPosition += (short)(s_Module.PositionJumpFlag - 2);
+					s_Module.Playback_SongPosition += (short)(s_Module.PositionJumpFlag - 2);
 
 					for (channel = 0; channel < s_Module.NumChannels; channel++)
 					{
@@ -3273,21 +3271,21 @@ namespace SharpMik.Player
 					s_Module.PatternNewStartPosition = 0;
 					s_Module.PositionJumpFlag = 0;
 
-					if (s_Module.SongPosition < 0)
+					if (s_Module.Playback_SongPosition < 0)
 					{
-						s_Module.SongPosition = (short)(s_Module.NumPositions - 1);
+						s_Module.Playback_SongPosition = (short)(s_Module.NumPositions - 1);
 					}
 
 					/* handle the "---" (end of song) pattern since it can occur
 					   *inside* the module in some formats */
-					if ((s_Module.SongPosition >= s_Module.NumPositions) || (s_Module.Positions[s_Module.SongPosition] == Constants.LAST_PATTERN))
+					if ((s_Module.Playback_SongPosition >= s_Module.NumPositions) || (s_Module.Positions[s_Module.Playback_SongPosition] == Constants.LAST_PATTERN))
 					{
 						if (!s_Module.Wrap)
 						{
 							return;
 						}
 
-						if ((s_Module.SongPosition = (short)s_Module.RestartPosition) == 0)
+						if ((s_Module.Playback_SongPosition = (short)s_Module.RestartPosition) == 0)
 						{
 							s_Module.Volume = (short)(s_Module.InitialVolume > 128 ? 128 : s_Module.InitialVolume);
 
@@ -3312,11 +3310,11 @@ namespace SharpMik.Player
 			}
 
 			/* Fade global volume if enabled and we're playing the last pattern */
-			if (((s_Module.SongPosition == s_Module.NumPositions - 1) ||
-				 (s_Module.Positions[s_Module.SongPosition + 1] == Constants.LAST_PATTERN)) &&
+			if (((s_Module.Playback_SongPosition == s_Module.NumPositions - 1) ||
+				 (s_Module.Positions[s_Module.Playback_SongPosition + 1] == Constants.LAST_PATTERN)) &&
 				s_Module.Fadeout)
 			{
-				max_volume = s_Module.NumRowsOnCurrentPattern != 0 ? (s_Module.NumRowsOnCurrentPattern - s_Module.PatternRowNumber) * 128 / s_Module.NumRowsOnCurrentPattern : 0;
+				max_volume = s_Module.NumRowsOnCurrentPattern != 0 ? (s_Module.NumRowsOnCurrentPattern - s_Module.Playback_PatternRowNumber) * 128 / s_Module.NumRowsOnCurrentPattern : 0;
 			}
 			else
 			{
@@ -3447,7 +3445,7 @@ namespace SharpMik.Player
 				tmpvol /= 128 * 256 * 128;
 
 				/* fade out */
-				if (mod.SongPosition >= mod.NumPositions)
+				if (mod.Playback_SongPosition >= mod.NumPositions)
 				{
 					tmpvol = 0;
 				}
@@ -3623,7 +3621,7 @@ namespace SharpMik.Player
 				}
 				else
 				{
-					ModDriver.Voice_SetFrequency_internal((sbyte)channel, getfrequency(mod.Flags, playperiod));
+					ModDriver.Voice_SetFrequency_internal((sbyte)channel, GetFrequency(mod.Flags, playperiod));
 
 					/* if keyfade, start substracting fadeoutspeed from fadevol: */
 					if ((i != null) && (aout.main.keyoff & Constants.KEY_FADE) == Constants.KEY_FADE)
@@ -3764,8 +3762,6 @@ namespace SharpMik.Player
 
 				if (a.main.kick == Constants.KICK_NOTE)
 				{
-					var kill = false;
-
 					if (a.slave != null)
 					{
 						var aout = a.slave;
@@ -3807,7 +3803,7 @@ namespace SharpMik.Player
 							   (mod.Voice[t].masterchn == channel) &&
 							   (a.main.sample == mod.Voice[t].main.sample))
 							{
-								kill = false;
+								var kill = false;
 								switch (a.dct)
 								{
 									case Constants.DCT_NOTE:
@@ -3970,20 +3966,20 @@ namespace SharpMik.Player
 			{
 				a = mod.Control[channel];
 
-				if (mod.SongPosition >= mod.NumPositions)
+				if (mod.Playback_SongPosition >= mod.NumPositions)
 				{
 					tr = mod.NumTracks;
 					mod.NumRowsOnCurrentPattern = 0;
 				}
 				else
 				{
-					tr = mod.Patterns[(mod.Positions[mod.SongPosition] * mod.NumChannels) + channel];
-					mod.NumRowsOnCurrentPattern = mod.PatternRows[mod.Positions[mod.SongPosition]];
+					tr = mod.Patterns[(mod.Positions[mod.Playback_SongPosition] * mod.NumChannels) + channel];
+					mod.NumRowsOnCurrentPattern = mod.PatternRows[mod.Positions[mod.Playback_SongPosition]];
 				}
 
 				if (tr < mod.NumTracks)
 				{
-					var place = InternalModuleFormat.UniFindRow(mod.Tracks[tr], mod.PatternRowNumber);
+					var place = InternalModuleFormat.UniFindRow(mod.Tracks[tr], mod.Playback_PatternRowNumber);
 					a.row = mod.Tracks[tr];
 					a.rowPos = place;
 				}
@@ -4186,26 +4182,26 @@ namespace SharpMik.Player
 			{
 				if ((flags & Constants.UF_LINEAR) == Constants.UF_LINEAR)
 				{
-					return getlinearperiod(note, speed);
+					return GetLinearPeriod(note, speed);
 				}
 				else
 				{
-					return getlogperiod(note, speed);
+					return GetLogPeriod(note, speed);
 				}
 			}
 			else
 			{
-				return getoldperiod(note, speed);
+				return GetOldPeriod(note, speed);
 			}
 		}
 
-		internal static ushort getlinearperiod(ushort note, uint fine)
+		internal static ushort GetLinearPeriod(ushort note, uint fine)
 		{
 			var t = (int)(((((20 + (2 * HIGH_OCTAVE)) * Constants.Octave) + 2 - note) * 32) - (fine >> 1));
 			return (ushort)t;
 		}
 
-		static ushort getlogperiod(ushort note, uint fine)
+		static ushort GetLogPeriod(ushort note, uint fine)
 		{
 			ushort n, o;
 			ushort p1, p2;
@@ -4230,7 +4226,7 @@ namespace SharpMik.Player
 			return (ushort)(Interpolate((short)(fine >> 4), 0, 15, (short)p1, (short)p2) >> o);
 		}
 
-		static ushort getoldperiod(ushort note, uint speed)
+		static ushort GetOldPeriod(ushort note, uint speed)
 		{
 			ushort n, o;
 
@@ -4465,12 +4461,11 @@ namespace SharpMik.Player
 		static short DoPan(short envpan, short pan)
 		{
 			var newpan = pan + ((envpan - Constants.PAN_CENTER) * (128 - Math.Abs(pan - Constants.PAN_CENTER)) / 128);
-
 			return (short)((newpan < Constants.PAN_LEFT) ? Constants.PAN_LEFT : (newpan > Constants.PAN_RIGHT ? Constants.PAN_RIGHT : newpan));
 		}
 
 		/* XM linear period to frequency conversion */
-		internal static uint getfrequency(ushort flags, uint period)
+		internal static uint GetFrequency(ushort flags, uint period)
 		{
 			unchecked
 			{

@@ -1,11 +1,11 @@
-﻿using SharpMik.Interfaces;
-using System.IO;
 using SharpMik.Attributes;
 using SharpMik.Common;
+using SharpMik.Interfaces;
+using System.IO;
 
 namespace SharpMik.Loaders
 {
-	[ModFileExtentions(".ult")]
+	[ModFileExtensions(".ult")]
 	public class ULTLoader : IModLoader
 	{
 		struct ULTHEADER
@@ -338,7 +338,7 @@ namespace SharpMik.Loaders
 
 		public override string LoadTitle()
 		{
-			m_Reader.Seek(15, SeekOrigin.Begin);
+			_ = m_Reader.Seek(15, SeekOrigin.Begin);
 
 			var title = m_Reader.Read_String(32);
 

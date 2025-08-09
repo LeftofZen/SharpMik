@@ -1,26 +1,21 @@
-﻿using System;
-using SharpMik.IO;
-using SharpMik.Extentions;
-using SharpMik.Player;
 using SharpMik.Common;
+using SharpMik.Extensions;
+using SharpMik.IO;
+using SharpMik.Player;
+using System;
 
 namespace SharpMik.Interfaces
 {
 	public abstract class IModLoader
 	{
 
-		#region protected variables		
 		protected string m_ModuleType;
 		protected string m_ModuleVersion;
-
 		protected ModuleReader m_Reader;
-
 		protected Module m_Module;
-
 		protected string m_LoadError;
 
-		public virtual string[] FileExtentions { get; }
-		#endregion
+		public virtual string[] FileExtensions { get; }
 
 		#region Common Loader variables
 
@@ -349,7 +344,7 @@ namespace SharpMik.Interfaces
 				int i;
 
 				var comment = new char[len + 1];
-				m_Reader.Read_bytes(comment, len);
+				_ = m_Reader.Read_bytes(comment, len);
 
 				/* translate IT linefeeds */
 				for (i = 0; i < len; i++)
@@ -391,7 +386,7 @@ namespace SharpMik.Interfaces
 
 			speed >>= 1;
 
-			while ((tmp = (int)ModPlayer.getfrequency(m_Module.Flags, ModPlayer.getlinearperiod((ushort)(note << 1), 0))) < speed)
+			while ((tmp = (int)ModPlayer.GetFrequency(m_Module.Flags, ModPlayer.GetLinearPeriod((ushort)(note << 1), 0))) < speed)
 			{
 				ctmp = tmp;
 				note++;
@@ -403,7 +398,7 @@ namespace SharpMik.Interfaces
 				{
 					while (tmp > speed)
 					{
-						tmp = (int)ModPlayer.getfrequency(m_Module.Flags, ModPlayer.getlinearperiod((ushort)(note << 1), (uint)(--finetune)));
+						tmp = (int)ModPlayer.GetFrequency(m_Module.Flags, ModPlayer.GetLinearPeriod((ushort)(note << 1), (uint)(--finetune)));
 					}
 				}
 				else
@@ -411,7 +406,7 @@ namespace SharpMik.Interfaces
 					note--;
 					while (ctmp < speed)
 					{
-						ctmp = (int)ModPlayer.getfrequency(m_Module.Flags, ModPlayer.getlinearperiod((ushort)(note << 1), (uint)(++finetune)));
+						ctmp = (int)ModPlayer.GetFrequency(m_Module.Flags, ModPlayer.GetLinearPeriod((ushort)(note << 1), (uint)(++finetune)));
 					}
 				}
 			}
@@ -505,10 +500,8 @@ namespace SharpMik.Interfaces
 			char[] tempcomment;
 			//char[] line;
 			char[] storage;
-			ushort total = 0, t, lines;
+			ushort t, lines;
 			int i;
-			var j = 0;
-
 			lines = (ushort)((len + linelen - 1) / linelen);
 
 			if (len != 0)
@@ -516,13 +509,14 @@ namespace SharpMik.Interfaces
 				tempcomment = new char[len + 1];
 				storage = new char[len + 1];
 
+				int j;
 				for (j = 0; j < len; j++)
 				{
 					tempcomment[j] = ' ';
 				}
 
-				m_Reader.Read_bytes(tempcomment, len);
-
+				_ = m_Reader.Read_bytes(tempcomment, len);
+				ushort total;
 				for (j = 0, total = t = 0; t < lines; t++, j += linelen)
 				{
 					for (i = linelen; j + i < len && (i >= 0) && (tempcomment[j + i] == ' '); i--)
@@ -559,9 +553,6 @@ namespace SharpMik.Interfaces
 						m_Module.Comment += new string(storage);
 						m_Module.Comment += "\r";
 					}
-
-					storage = null;
-					tempcomment = null;
 				}
 			}
 

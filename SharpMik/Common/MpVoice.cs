@@ -1,4 +1,4 @@
-﻿namespace SharpMik.Common
+namespace SharpMik.Common
 {
 	/* Used by NNA only player (audio control.  AUDTMP is used for full effects
 	   control). */

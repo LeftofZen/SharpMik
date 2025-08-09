@@ -1,10 +1,10 @@
-﻿using SharpMik.Interfaces;
 using SharpMik.Attributes;
 using SharpMik.Common;
+using SharpMik.Interfaces;
 
 namespace SharpMik.Loaders
 {
-	[ModFileExtentions(".m15")]
+	[ModFileExtensions(".m15")]
 	public class M15Loader : IModLoader
 	{
 		class M15SampleInfo
@@ -157,7 +157,7 @@ namespace SharpMik.Loaders
 				return false;
 			}
 
-			m_Reader.Read_bytes(mh.positions, 128);
+			_ = m_Reader.Read_bytes(mh.positions, 128);
 
 			/* sanity check : pattern range is 0..63 */
 			for (t = 0; t < 128; t++)
@@ -184,8 +184,8 @@ namespace SharpMik.Loaders
 			for (t = 0; t < numpat * (64U * 4); t++)
 			{
 				/* Load the pattern into the temp buffer and scan it */
-				m_Reader.Read_byte();
-				m_Reader.Read_byte();
+				_ = m_Reader.Read_byte();
+				_ = m_Reader.Read_byte();
 
 				eff = m_Reader.Read_byte();
 				dat = m_Reader.Read_byte();
@@ -428,7 +428,6 @@ namespace SharpMik.Loaders
 			if (note != 0)
 			{
 				UniNote(note + (2 * Constants.Octave) - 1);
-				lastnote = note;
 			}
 
 			/* Convert pattern jump from Dec to Hex */
@@ -689,7 +688,7 @@ namespace SharpMik.Loaders
 
 		public override string LoadTitle()
 		{
-			m_Reader.Seek(20, System.IO.SeekOrigin.Begin);
+			_ = m_Reader.Seek(20, System.IO.SeekOrigin.Begin);
 
 			var title = m_Reader.Read_String(20);
 

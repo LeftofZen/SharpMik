@@ -1,28 +1,26 @@
-﻿using SharpMik.Drivers;
+using SharpMik.Drivers;
 
 namespace MikModUnitTest
 {
 	public class TestDriver : VirtualSoftwareDriver
 	{
 		byte[] m_CWav;
-
 		sbyte[] m_Audiobuffer;
-		public static uint BUFFERSIZE = 32768;
+		public const uint BUFFERSIZE = 32768;
 
 		long m_Place;
-		bool m_Failed;
 
 		public TestDriver()
 		{
-			m_Next = null;
-			m_Name = "Test Driver";
-			m_Version = "Test Driver";
-			m_HardVoiceLimit = 0;
-			m_SoftVoiceLimit = 255;
-			m_AutoUpdating = false;
+			NextDriver = null;
+			Name = "Test Driver";
+			Version = "Test Driver";
+			HardVoiceLimit = 0;
+			SoftVoiceLimit = 255;
+			AutoUpdating = false;
 		}
 
-		public bool Failed => m_Failed;
+		public bool Failed { get; private set; }
 
 		public void SetCWav(byte[] data) => m_CWav = data;
 
@@ -44,7 +42,7 @@ namespace MikModUnitTest
 		public override bool PlayStart()
 		{
 			m_Place = 44;
-			m_Failed = false;
+			Failed = false;
 			return base.PlayStart();
 		}
 
@@ -61,7 +59,7 @@ namespace MikModUnitTest
 			{
 				if ((byte)m_Audiobuffer[i] != m_CWav[m_Place])
 				{
-					m_Failed = true;
+					Failed = true;
 					return;
 				}
 

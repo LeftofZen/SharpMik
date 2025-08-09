@@ -1,9 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
 
 using SharpMik.Interfaces;
 using SharpMik.Player;
 using System.Diagnostics;
+using SharpMik.Common;
 
 namespace SharpMik.Drivers
 {
@@ -19,41 +19,40 @@ namespace SharpMik.Drivers
 	 */
 	public abstract class VirtualDriver1 : IModDriver
 	{
-        class VirtualDriver1VoiceInfo
-        {
-            public byte Kick;                   // =1 -> sample has to be restarted
-            public byte Active;                 // =1 -> sample is playing
-            public ushort Flags;                // 16/8 bits looping/one-shot
-            public short Handle;                // identifies the sample
-            public uint Start;                  // start index
-            public uint Size;                   // sample size
-            public uint RepeatStartPosition;    // loop start
-            public uint RepeatEndPosition;      // loop end
-            public uint Frequency;              // current frequency
-            public int Volume;                  // current volume
-            public int Panning;                 // current panning position
+		class VirtualDriver1VoiceInfo
+		{
+			public byte Kick;                   // =1 -> sample has to be restarted
+			public byte Active;                 // =1 -> sample is playing
+			public ushort Flags;                // 16/8 bits looping/one-shot
+			public short Handle;                // identifies the sample
+			public uint Start;                  // start index
+			public uint Size;                   // sample size
+			public uint RepeatStartPosition;    // loop start
+			public uint RepeatEndPosition;      // loop end
+			public uint Frequency;              // current frequency
+			public int Volume;                  // current volume
+			public int Panning;                 // current panning position
 
-            public int Click;
-            public int LastValueLeft;
-            public int LastValueRight;
+			public int Click;
+			public int LastValueLeft;
+			public int LastValueRight;
 
-            public int RampVolume;
-            public int LeftVolumeFactor;
-            public int RightVolumeFactor;       // Volume factor in range 0-255
-            public int LeftVolumeOld;
-            public int RightVolumeOld;
+			public int RampVolume;
+			public int LeftVolumeFactor;
+			public int RightVolumeFactor;       // Volume factor in range 0-255
+			public int LeftVolumeOld;
+			public int RightVolumeOld;
 
-            public long CurrentSampleIndex;     // current index in the sample
-            public long CurrentIncrement;       // increment value
-        }
+			public long CurrentSampleIndex;     // current index in the sample
+			public long CurrentIncrement;       // increment value
+		}
 
-
-        short[][] m_Samples;
-		VirtualDriver1VoiceInfo [] m_VoiceInfos = null;
-		VirtualDriver1VoiceInfo m_CurrentVoiceInfo = null;
-		long m_TickLeft = 0;
-		long m_SamplesThatFit = 0;
-		long m_VcMemory = 0;
+		short[][] m_Samples;
+		VirtualDriver1VoiceInfo[] m_VoiceInfos;
+		VirtualDriver1VoiceInfo m_CurrentVoiceInfo;
+		long m_TickLeft;
+		long m_SamplesThatFit;
+		long m_VcMemory;
 		int m_VcSoftChannel;
 		long m_IdxSize;
 		long m_IdxlPos;
@@ -65,7 +64,7 @@ namespace SharpMik.Drivers
 
 		// Reverb vars
 		uint m_RvrIndex;
-		int[][][] m_RvBuf = null;
+		int[][][] m_RvBuf;
 		int[] m_Rvc;
 
 		const int REVERBERATION = 110000;
@@ -77,9 +76,8 @@ namespace SharpMik.Drivers
 		const int CLICK_SHIFT = 6;
 		const int CLICK_BUFFER = (1 << CLICK_SHIFT);
 
-
 		// These are to aid in debugging
-		public static bool s_TestModeOn = false;
+		public static bool s_TestModeOn;
 		public static int s_TestPlace = 2;
 		public static int s_TestChannel = 23;
 
@@ -88,8 +86,7 @@ namespace SharpMik.Drivers
 		int Mix32MonoNormal(short[] srce, int[] dest, int index, int increment, int todo, int place)
 		{
 			short sample;
-			int lvolsel = m_CurrentVoiceInfo.LeftVolumeFactor;
-			
+			var lvolsel = m_CurrentVoiceInfo.LeftVolumeFactor;
 
 			while (todo-- != 0)
 			{
@@ -101,15 +98,14 @@ namespace SharpMik.Drivers
 			return index;
 		}
 
-
 		int Mix32StereoNormal(short[] srce, int[] dest, int index, int increment, int todo, int place)
 		{
 			unchecked
 			{
 				short sample;
-				int lvolsel = m_CurrentVoiceInfo.LeftVolumeFactor;
-				int rvolsel = m_CurrentVoiceInfo.RightVolumeFactor;
-				
+				var lvolsel = m_CurrentVoiceInfo.LeftVolumeFactor;
+				var rvolsel = m_CurrentVoiceInfo.RightVolumeFactor;
+
 				while (todo-- != 0)
 				{
 					sample = srce[index >> FRACBITS];
@@ -122,12 +118,11 @@ namespace SharpMik.Drivers
 			}
 		}
 
-
 		int Mix32SurroundNormal(short[] srce, int[] dest, int index, int increment, int todo, int place)
 		{
 			short sample;
-			int lvolsel = m_CurrentVoiceInfo.LeftVolumeFactor;
-			int rvolsel = m_CurrentVoiceInfo.RightVolumeFactor;
+			var lvolsel = m_CurrentVoiceInfo.LeftVolumeFactor;
+			var rvolsel = m_CurrentVoiceInfo.RightVolumeFactor;
 
 			if (lvolsel >= rvolsel)
 			{
@@ -154,16 +149,15 @@ namespace SharpMik.Drivers
 			return index;
 		}
 
-
 		int Mix32MonoInterp(short[] srce, int[] dest, int index, int increment, int todo, int place)
 		{
 			int sample;
-			int lvolsel = m_CurrentVoiceInfo.LeftVolumeFactor;
-			int rampvol = m_CurrentVoiceInfo.RampVolume;
+			var lvolsel = m_CurrentVoiceInfo.LeftVolumeFactor;
+			var rampvol = m_CurrentVoiceInfo.RampVolume;
 
 			if (rampvol != 0)
 			{
-				int oldlvol = m_CurrentVoiceInfo.LeftVolumeOld - lvolsel;
+				var oldlvol = m_CurrentVoiceInfo.LeftVolumeOld - lvolsel;
 				while (todo-- != 0)
 				{
 					sample = (int)srce[index >> FRACBITS] +
@@ -174,13 +168,17 @@ namespace SharpMik.Drivers
 					dest[place++] += ((lvolsel << CLICK_SHIFT) + oldlvol * rampvol)
 							   * sample >> CLICK_SHIFT;
 					if (--rampvol == 0)
+					{
 						break;
+					}
 				}
-				
+
 				m_CurrentVoiceInfo.RampVolume = rampvol;
 
 				if (todo < 0)
+				{
 					return index;
+				}
 			}
 
 			while (todo-- != 0)
@@ -195,18 +193,17 @@ namespace SharpMik.Drivers
 			return index;
 		}
 
-
 		int Mix32StereoInterp(short[] srce, int[] dest, int index, int increment, int todo, int place)
 		{
 			int sample;
-			int lvolsel = m_CurrentVoiceInfo.LeftVolumeFactor;
-			int rvolsel = m_CurrentVoiceInfo.RightVolumeFactor;
-			int rampvol = m_CurrentVoiceInfo.RampVolume;
+			var lvolsel = m_CurrentVoiceInfo.LeftVolumeFactor;
+			var rvolsel = m_CurrentVoiceInfo.RightVolumeFactor;
+			var rampvol = m_CurrentVoiceInfo.RampVolume;
 
 			if (rampvol != 0)
 			{
-				int oldlvol = m_CurrentVoiceInfo.LeftVolumeOld - lvolsel;
-				int oldrvol = m_CurrentVoiceInfo.RightVolumeOld - rvolsel;
+				var oldlvol = m_CurrentVoiceInfo.LeftVolumeOld - lvolsel;
+				var oldrvol = m_CurrentVoiceInfo.RightVolumeOld - rvolsel;
 				while (todo-- != 0)
 				{
 					sample = (int)srce[index >> FRACBITS] +
@@ -219,13 +216,17 @@ namespace SharpMik.Drivers
 					dest[place++] += ((rvolsel << CLICK_SHIFT) + oldrvol * rampvol)
 							   * sample >> CLICK_SHIFT;
 					if (--rampvol == 0)
+					{
 						break;
+					}
 				}
-				
+
 				m_CurrentVoiceInfo.RampVolume = rampvol;
-				
+
 				if (todo < 0)
+				{
 					return index;
+				}
 			}
 
 			while (todo-- != 0)
@@ -241,13 +242,12 @@ namespace SharpMik.Drivers
 			return index;
 		}
 
-
 		int Mix32SurroundInterp(short[] srce, int[] dest, int index, int increment, int todo, int place)
 		{
 			int sample;
-			int lvolsel = m_CurrentVoiceInfo.LeftVolumeFactor;
-			int rvolsel = m_CurrentVoiceInfo.RightVolumeFactor;
-			int rampvol = m_CurrentVoiceInfo.RampVolume;
+			var lvolsel = m_CurrentVoiceInfo.LeftVolumeFactor;
+			var rvolsel = m_CurrentVoiceInfo.RightVolumeFactor;
+			var rampvol = m_CurrentVoiceInfo.RampVolume;
 			int oldvol, vol;
 
 			if (lvolsel >= rvolsel)
@@ -277,11 +277,15 @@ namespace SharpMik.Drivers
 					dest[place++] -= sample;
 
 					if (--rampvol == 0)
+					{
 						break;
+					}
 				}
 				m_CurrentVoiceInfo.RampVolume = rampvol;
 				if (todo < 0)
+				{
 					return index;
+				}
 			}
 
 			while (todo-- != 0)
@@ -299,26 +303,28 @@ namespace SharpMik.Drivers
 
 		#endregion
 
-		public override short SampleLoad(SAMPLOAD sload, int type)
+		public override short SampleLoad(SampleLoad sload, int type)
 		{
-			SAMPLE s = sload.sample;
-			
+			var s = sload.sample;
+
 			int handle;
 			uint t, length, loopstart, loopend;
 
-			if (type == (int)SharpMikCommon.MDDecodeTypes.MD_HARDWARE)
+			if (type == (int)MDDecodeTypes.MD_HARDWARE)
 			{
 				return 0;
 			}
 
 			/* Find empty slot to put sample address in */
-			for (handle = 0; handle < SharpMikCommon.MAXSAMPLEHANDLES; handle++)
+			for (handle = 0; handle < Constants.MAXSAMPLEHANDLES; handle++)
 			{
-				if (m_Samples[handle] == null) 
+				if (m_Samples[handle] == null)
+				{
 					break;
+				}
 			}
 
-			if (handle == SharpMikCommon.MAXSAMPLEHANDLES)
+			if (handle == Constants.MAXSAMPLEHANDLES)
 			{
 				// Throw an exception so it reaches all the way up to the loader to show the load failed.
 				throw new Exception("Out of handles");
@@ -333,7 +339,7 @@ namespace SharpMik.Drivers
 			if (s.loopstart >= s.loopend)
 			{
 				int flags = s.flags;
-				flags &= ~SharpMikCommon.SF_LOOP;
+				flags &= ~Constants.SF_LOOP;
 
 				s.flags = (ushort)flags;
 			}
@@ -345,17 +351,19 @@ namespace SharpMik.Drivers
 			SampleLoader.SL_SampleSigned(sload);
 			SampleLoader.SL_Sample8to16(sload);
 
-			uint len =((length + 20) << 1);
+			var len = ((length + 20) << 1);
 			m_Samples[handle] = new short[len];
 
 			/* read sample into buffer */
 			if (SampleLoader.SL_Load(m_Samples[handle], sload, length))
+			{
 				return -1;
+			}
 
 			/* Unclick sample */
-			if ((s.flags & SharpMikCommon.SF_LOOP) == SharpMikCommon.SF_LOOP)
+			if ((s.flags & Constants.SF_LOOP) == Constants.SF_LOOP)
 			{
-				if ((s.flags & SharpMikCommon.SF_BIDI) == SharpMikCommon.SF_BIDI)
+				if ((s.flags & Constants.SF_BIDI) == Constants.SF_BIDI)
 				{
 					for (t = 0; t < 16; t++)
 					{
@@ -383,58 +391,53 @@ namespace SharpMik.Drivers
 
 		public override void SampleUnload(short handle)
 		{
-			if (handle < SharpMikCommon.MAXSAMPLEHANDLES)
+			if (handle < Constants.MAXSAMPLEHANDLES)
 			{
 				m_Samples[handle] = null;
 			}
 		}
 
-		public override uint FreeSampleSpace(int value)
-		{
-			return (uint)m_VcMemory;
-		}
+		public override uint FreeSampleSpace(int value) => (uint)m_VcMemory;
 
-		public override uint RealSampleLength(int value, SAMPLE sample)
+		public override uint RealSampleLength(int value, Sample sample)
 		{
 			if (sample == null)
 			{
 				return 0;
 			}
 
-			return (uint)((sample.length * ((sample.flags & SharpMikCommon.SF_16BITS) == SharpMikCommon.SF_16BITS ? 2 : 1)) + 16);
+			return (uint)((sample.length * ((sample.flags & Constants.SF_16BITS) == Constants.SF_16BITS ? 2 : 1)) + 16);
 		}
 
 		public override bool Init()
 		{
-			m_Samples = new short[SharpMikCommon.MAXSAMPLEHANDLES][];
+			m_Samples = new short[Constants.MAXSAMPLEHANDLES][];
 
 			m_VcTickBuf = new int[TICKLSIZE];
 
 			m_VcMode = ModDriver.Mode;
 
-
 			m_Rvc = new int[8];
 
-			m_Rvc[0] = (5000 * ModDriver.MixFreq) / REVERBERATION;
-			m_Rvc[1] = (5078 * ModDriver.MixFreq) / REVERBERATION;
-			m_Rvc[2] = (5313 * ModDriver.MixFreq) / REVERBERATION;
-			m_Rvc[3] = (5703 * ModDriver.MixFreq) / REVERBERATION;
-			m_Rvc[4] = (6250 * ModDriver.MixFreq) / REVERBERATION;
-			m_Rvc[5] = (6953 * ModDriver.MixFreq) / REVERBERATION;
-			m_Rvc[6] = (7813 * ModDriver.MixFreq) / REVERBERATION;
-			m_Rvc[7] = (8828 * ModDriver.MixFreq) / REVERBERATION;
-
+			m_Rvc[0] = (5000 * ModDriver.MixFrequency) / REVERBERATION;
+			m_Rvc[1] = (5078 * ModDriver.MixFrequency) / REVERBERATION;
+			m_Rvc[2] = (5313 * ModDriver.MixFrequency) / REVERBERATION;
+			m_Rvc[3] = (5703 * ModDriver.MixFrequency) / REVERBERATION;
+			m_Rvc[4] = (6250 * ModDriver.MixFrequency) / REVERBERATION;
+			m_Rvc[5] = (6953 * ModDriver.MixFrequency) / REVERBERATION;
+			m_Rvc[6] = (7813 * ModDriver.MixFrequency) / REVERBERATION;
+			m_Rvc[7] = (8828 * ModDriver.MixFrequency) / REVERBERATION;
 
 			m_RvBuf = new int[2][][];
-			for (int side = 0; side < 2; side++)
+			for (var side = 0; side < 2; side++)
 			{
 				m_RvBuf[side] = new int[8][];
-				for (int channel = 0; channel < 8; channel++)
+				for (var channel = 0; channel < 8; channel++)
 				{
 					m_RvBuf[side][channel] = new int[m_Rvc[channel] + 1];
 				}
 			}
-			m_IsStereo = (m_VcMode & SharpMikCommon.DMODE_STEREO) == SharpMikCommon.DMODE_STEREO;
+			m_IsStereo = (m_VcMode & Constants.DMODE_STEREO) == Constants.DMODE_STEREO;
 
 			return false;
 		}
@@ -447,22 +450,21 @@ namespace SharpMik.Drivers
 			m_RvBuf = null;
 		}
 
-		public override bool Reset()
-		{
-			return false;
-		}
+		public override bool Reset() => false;
 
 		public override bool SetNumVoices()
 		{
 			int t;
 
-			if ((m_VcSoftChannel = ModDriver.SoftChn) == 0)
+			if ((m_VcSoftChannel = ModDriver.SoftwareChannel) == 0)
 			{
 				return true;
 			}
 
 			if (m_VoiceInfos != null)
+			{
 				m_VoiceInfos = null;
+			}
 
 			m_VoiceInfos = new VirtualDriver1VoiceInfo[m_VcSoftChannel];
 
@@ -471,7 +473,7 @@ namespace SharpMik.Drivers
 				m_VoiceInfos[t] = new VirtualDriver1VoiceInfo();
 
 				m_VoiceInfos[t].Frequency = 10000;
-				m_VoiceInfos[t].Panning = (t & 1) == 1 ? SharpMikCommon.PAN_LEFT : SharpMikCommon.PAN_RIGHT;
+				m_VoiceInfos[t].Panning = (t & 1) == 1 ? Constants.PAN_LEFT : Constants.PAN_RIGHT;
 			}
 
 			return false;
@@ -480,7 +482,7 @@ namespace SharpMik.Drivers
 		public override bool PlayStart()
 		{
 			m_SamplesThatFit = TICKLSIZE;
-			m_IsStereo = (m_VcMode & SharpMikCommon.DMODE_STEREO) == SharpMikCommon.DMODE_STEREO;
+			m_IsStereo = (m_VcMode & Constants.DMODE_STEREO) == Constants.DMODE_STEREO;
 
 			if (m_IsStereo)
 			{
@@ -493,14 +495,11 @@ namespace SharpMik.Drivers
 		}
 
 		public override void PlayStop()
-		{			
+		{
 		}
 
 		// This must be over ridden by the driver that implements this class
-		public override void Update()
-		{
-			throw new NotImplementedException();
-		}
+		public override void Update() => throw new NotImplementedException();
 
 		public override void Pause()
 		{
@@ -509,9 +508,8 @@ namespace SharpMik.Drivers
 
 		public override void Resume()
 		{
-			
-		}
 
+		}
 
 		public override void VoiceSetVolume(byte voice, ushort volume)
 		{
@@ -524,20 +522,11 @@ namespace SharpMik.Drivers
 			m_VoiceInfos[voice].Volume = volume;
 		}
 
-		public override ushort VoiceGetVolume(byte voice)
-		{
-			return (ushort)m_VoiceInfos[voice].Volume;
-		}
+		public override ushort VoiceGetVolume(byte voice) => (ushort)m_VoiceInfos[voice].Volume;
 
-		public override void VoiceSetFrequency(byte voice, uint freq)
-		{
-			m_VoiceInfos[voice].Frequency = freq;
-		}
+		public override void VoiceSetFrequency(byte voice, uint freq) => m_VoiceInfos[voice].Frequency = freq;
 
-		public override uint VoiceGetFrequency(byte voice)
-		{
-			return m_VoiceInfos[voice].Frequency;
-		}
+		public override uint VoiceGetFrequency(byte voice) => m_VoiceInfos[voice].Frequency;
 
 		public override void VoiceSetPanning(byte voice, uint panning)
 		{
@@ -549,10 +538,7 @@ namespace SharpMik.Drivers
 			m_VoiceInfos[voice].Panning = (int)panning;
 		}
 
-		public override uint VoiceGetPanning(byte voice)
-		{
-			return (uint)m_VoiceInfos[voice].Panning;
-		}
+		public override uint VoiceGetPanning(byte voice) => (uint)m_VoiceInfos[voice].Panning;
 
 		public override void VoicePlay(byte voice, short handle, uint start, uint size, uint reppos, uint repend, ushort flags)
 		{
@@ -565,20 +551,11 @@ namespace SharpMik.Drivers
 			m_VoiceInfos[voice].Kick = 1;
 		}
 
-		public override void VoiceStop(byte voice)
-		{
-			m_VoiceInfos[voice].Active = 0;
-		}
+		public override void VoiceStop(byte voice) => m_VoiceInfos[voice].Active = 0;
 
-		public override bool VoiceStopped(byte voice)
-		{
-			return (m_VoiceInfos[voice].Active == 0);
-		}
+		public override bool VoiceStopped(byte voice) => (m_VoiceInfos[voice].Active == 0);
 
-		public override int VoiceGetPosition(byte voice)
-		{
-			return (int)(m_VoiceInfos[voice].CurrentIncrement >> FRACBITS);
-		}
+		public override int VoiceGetPosition(byte voice) => (int)(m_VoiceInfos[voice].CurrentIncrement >> FRACBITS);
 
 		public override uint VoiceRealVolume(byte voice)
 		{
@@ -596,13 +573,24 @@ namespace SharpMik.Drivers
 			size = (int)m_VoiceInfos[voice].Size;
 
 			i = 64; t -= 64; k = 0; j = 0;
-			if (i > size) i = size;
-			if (t < 0) t = 0;
-			if (t + i > size) t = size - i;
+			if (i > size)
+			{
+				i = size;
+			}
+
+			if (t < 0)
+			{
+				t = 0;
+			}
+
+			if (t + i > size)
+			{
+				t = size - i;
+			}
 
 			i &= ~1;  /* make sure it's EVEN. */
 
-			int place = t;
+			var place = t;
 			for (; i != 0; i--, place++)
 			{
 				if (k < m_Samples[s][place])
@@ -617,11 +605,9 @@ namespace SharpMik.Drivers
 			return (uint)Math.Abs(k - j);
 		}
 
-
-
 		uint samples2bytes(uint samples)
 		{
-			if ((m_VcMode & SharpMikCommon.DMODE_16BITS) == SharpMikCommon.DMODE_16BITS)
+			if ((m_VcMode & Constants.DMODE_16BITS) == Constants.DMODE_16BITS)
 			{
 				samples <<= 1;
 			}
@@ -633,10 +619,9 @@ namespace SharpMik.Drivers
 			return samples;
 		}
 
-
 		uint bytes2samples(uint bytes)
 		{
-			if ((m_VcMode & SharpMikCommon.DMODE_16BITS) == SharpMikCommon.DMODE_16BITS)
+			if ((m_VcMode & Constants.DMODE_16BITS) == Constants.DMODE_16BITS)
 			{
 				bytes >>= 1;
 			}
@@ -652,24 +637,24 @@ namespace SharpMik.Drivers
 		{
 			uint speedup;
 			int ReverbPct;
-			uint[] loc = new uint[8];
+			var loc = new uint[8];
 
 			ReverbPct = 92 + (ModDriver.Reverb << 1);
 
-			for (int i = 0; i < 8; i++)
+			for (var i = 0; i < 8; i++)
 			{
 				loc[i] = (uint)(m_RvrIndex % m_Rvc[i]);
 			}
 
-			int place = 0;
+			var place = 0;
 			while (count-- != 0)
 			{
 				/* Compute the left channel echo buffers */
 				speedup = (uint)(m_VcTickBuf[place] >> 3);
 
-				int side = 0;
+				var side = 0;
 				speedup = (uint)(m_VcTickBuf[place + side] >> 3);
-				for (int channel = 0; channel < 8; channel++)
+				for (var channel = 0; channel < 8; channel++)
 				{
 					m_RvBuf[side][channel][loc[channel]] = (int)(speedup + ((ReverbPct * m_RvBuf[side][channel][loc[channel]]) >> 7));
 				}
@@ -677,12 +662,12 @@ namespace SharpMik.Drivers
 				/* Prepare to compute actual finalized data */
 				m_RvrIndex++;
 
-				for (int i = 0; i < 8; i++)
+				for (var i = 0; i < 8; i++)
 				{
 					loc[i] = (uint)(m_RvrIndex % m_Rvc[i]);
 				}
 
-				int value = m_RvBuf[side][0][loc[0]] - m_RvBuf[side][1][loc[1]];
+				var value = m_RvBuf[side][0][loc[0]] - m_RvBuf[side][1][loc[1]];
 				value += (m_RvBuf[side][2][loc[2]] - m_RvBuf[side][3][loc[3]]);
 				value += (m_RvBuf[side][4][loc[4]] - m_RvBuf[side][5][loc[5]]);
 				value += (m_RvBuf[side][6][loc[6]] - m_RvBuf[side][7][loc[7]]);
@@ -694,44 +679,42 @@ namespace SharpMik.Drivers
 		void MixReverb_Stereo(int count)
 		{
 			uint speedup;
-			int          ReverbPct;
-			uint[] loc = new uint[8];
+			int ReverbPct;
+			var loc = new uint[8];
 
-			ReverbPct = 92+(ModDriver.Reverb<<1);
+			ReverbPct = 92 + (ModDriver.Reverb << 1);
 
-			for (int i = 0; i < 8; i++)
+			for (var i = 0; i < 8; i++)
 			{
 				loc[i] = (uint)(m_RvrIndex % m_Rvc[i]);
 			}
 
-			int place = 0;
-			while(count-- != 0) 
+			var place = 0;
+			while (count-- != 0)
 			{
 				/* Compute the left channel echo buffers */
 				speedup = (uint)(m_VcTickBuf[place] >> 3);
 
-				for (int side = 0; side < 2; side++)
+				for (var side = 0; side < 2; side++)
 				{
 					speedup = (uint)(m_VcTickBuf[place + side] >> 3);
-					for (int channel = 0; channel < 8; channel++)
+					for (var channel = 0; channel < 8; channel++)
 					{
-						m_RvBuf[side][channel][loc[channel]]=(int)(speedup+((ReverbPct*m_RvBuf[side][channel][loc[channel] ])>>7));
+						m_RvBuf[side][channel][loc[channel]] = (int)(speedup + ((ReverbPct * m_RvBuf[side][channel][loc[channel]]) >> 7));
 					}
 				}
-			
+
 				/* Prepare to compute actual finalized data */
 				m_RvrIndex++;
 
-
-				for (int i = 0; i < 8; i++)
+				for (var i = 0; i < 8; i++)
 				{
 					loc[i] = (uint)(m_RvrIndex % m_Rvc[i]);
 				}
 
-
-				for (int side = 0; side < 2; side++)
+				for (var side = 0; side < 2; side++)
 				{
-					int value = m_RvBuf[side][0][loc[0]] - m_RvBuf[side][1][loc[1]];
+					var value = m_RvBuf[side][0][loc[0]] - m_RvBuf[side][1][loc[1]];
 					value += (m_RvBuf[side][2][loc[2]] - m_RvBuf[side][3][loc[3]]);
 					value += (m_RvBuf[side][4][loc[4]] - m_RvBuf[side][5][loc[5]]);
 					value += (m_RvBuf[side][6][loc[6]] - m_RvBuf[side][7][loc[7]]);
@@ -741,125 +724,126 @@ namespace SharpMik.Drivers
 			}
 		}
 
-
 		void AddChannel(int[] buff, int todo)
 		{
 			long end, done;
 
-			int place = 0;
+			var place = 0;
 
-			short[] s = m_Samples[m_CurrentVoiceInfo.Handle];
+			var s = m_Samples[m_CurrentVoiceInfo.Handle];
 
 			if (s == null)
 			{
 				m_CurrentVoiceInfo.CurrentSampleIndex = m_CurrentVoiceInfo.Active = 0;
 				return;
 			}
-				
-			while(todo>0) 
+
+			while (todo > 0)
 			{
 				long endpos;
 
-				if((m_CurrentVoiceInfo.Flags & SharpMikCommon.SF_REVERSE) == SharpMikCommon.SF_REVERSE)
+				if ((m_CurrentVoiceInfo.Flags & Constants.SF_REVERSE) == Constants.SF_REVERSE)
 				{
 					/* The sample is playing in reverse */
-					if((m_CurrentVoiceInfo.Flags&SharpMikCommon.SF_LOOP) == SharpMikCommon.SF_LOOP && (m_CurrentVoiceInfo.CurrentSampleIndex<m_IdxlPos)) 
+					if ((m_CurrentVoiceInfo.Flags & Constants.SF_LOOP) == Constants.SF_LOOP && (m_CurrentVoiceInfo.CurrentSampleIndex < m_IdxlPos))
 					{
 						/* the sample is looping and has reached the loopstart index */
-						if((m_CurrentVoiceInfo.Flags & SharpMikCommon.SF_BIDI) == SharpMikCommon.SF_BIDI)
+						if ((m_CurrentVoiceInfo.Flags & Constants.SF_BIDI) == Constants.SF_BIDI)
 						{
 							/* sample is doing bidirectional loops, so 'bounce' the
 							   current index against the idxlpos */
-							m_CurrentVoiceInfo.CurrentSampleIndex = m_IdxlPos+(m_IdxlPos-m_CurrentVoiceInfo.CurrentSampleIndex);
+							m_CurrentVoiceInfo.CurrentSampleIndex = m_IdxlPos + (m_IdxlPos - m_CurrentVoiceInfo.CurrentSampleIndex);
 							int value = m_CurrentVoiceInfo.Flags;
-							value &= ~SharpMikCommon.SF_REVERSE;
+							value &= ~Constants.SF_REVERSE;
 							m_CurrentVoiceInfo.Flags = (ushort)value;
 							m_CurrentVoiceInfo.CurrentIncrement = -m_CurrentVoiceInfo.CurrentIncrement;
-						} 
+						}
 						else
 						{
 							/* normal backwards looping, so set the current position to
 							   loopend index */
-							m_CurrentVoiceInfo.CurrentSampleIndex=m_IdxlEnd-(m_IdxlPos-m_CurrentVoiceInfo.CurrentSampleIndex);
+							m_CurrentVoiceInfo.CurrentSampleIndex = m_IdxlEnd - (m_IdxlPos - m_CurrentVoiceInfo.CurrentSampleIndex);
 						}
-					} 
-					else 
+					}
+					else
 					{
 						/* the sample is not looping, so check if it reached index 0 */
-						if(m_CurrentVoiceInfo.CurrentSampleIndex < 0) 
+						if (m_CurrentVoiceInfo.CurrentSampleIndex < 0)
 						{
 							/* playing index reached 0, so stop playing this sample */
-							m_CurrentVoiceInfo.CurrentSampleIndex = m_CurrentVoiceInfo.Active  = 0;
+							m_CurrentVoiceInfo.CurrentSampleIndex = m_CurrentVoiceInfo.Active = 0;
 							break;
 						}
 					}
-				} else {
+				}
+				else
+				{
 					/* The sample is playing forward */
-					if((m_CurrentVoiceInfo.Flags & SharpMikCommon.SF_LOOP) == SharpMikCommon.SF_LOOP &&   (m_CurrentVoiceInfo.CurrentSampleIndex >= m_IdxlEnd)) 
+					if ((m_CurrentVoiceInfo.Flags & Constants.SF_LOOP) == Constants.SF_LOOP && (m_CurrentVoiceInfo.CurrentSampleIndex >= m_IdxlEnd))
 					{
 						/* the sample is looping, check the loopend index */
-						if((m_CurrentVoiceInfo.Flags & SharpMikCommon.SF_BIDI) == SharpMikCommon.SF_BIDI)
+						if ((m_CurrentVoiceInfo.Flags & Constants.SF_BIDI) == Constants.SF_BIDI)
 						{
 							/* sample is doing bidirectional loops, so 'bounce' the
 							   current index against the idxlend */
-							m_CurrentVoiceInfo.Flags |= SharpMikCommon.SF_REVERSE;
+							m_CurrentVoiceInfo.Flags |= Constants.SF_REVERSE;
 							m_CurrentVoiceInfo.CurrentIncrement = -m_CurrentVoiceInfo.CurrentIncrement;
-							m_CurrentVoiceInfo.CurrentSampleIndex = m_IdxlEnd-(m_CurrentVoiceInfo.CurrentSampleIndex-m_IdxlEnd);
-						} 
+							m_CurrentVoiceInfo.CurrentSampleIndex = m_IdxlEnd - (m_CurrentVoiceInfo.CurrentSampleIndex - m_IdxlEnd);
+						}
 						else
 						{
 							/* normal backwards looping, so set the current position
 							   to loopend index */
-							m_CurrentVoiceInfo.CurrentSampleIndex=m_IdxlPos+(m_CurrentVoiceInfo.CurrentSampleIndex-m_IdxlEnd);
+							m_CurrentVoiceInfo.CurrentSampleIndex = m_IdxlPos + (m_CurrentVoiceInfo.CurrentSampleIndex - m_IdxlEnd);
 						}
-					} 
-					else 
+					}
+					else
 					{
 						/* sample is not looping, so check if it reached the last
 						   position */
-						if(m_CurrentVoiceInfo.CurrentSampleIndex >= m_IdxSize) 
+						if (m_CurrentVoiceInfo.CurrentSampleIndex >= m_IdxSize)
 						{
 							/* yes, so stop playing this sample */
-							m_CurrentVoiceInfo.CurrentSampleIndex = m_CurrentVoiceInfo.Active  = 0;
+							m_CurrentVoiceInfo.CurrentSampleIndex = m_CurrentVoiceInfo.Active = 0;
 							break;
 						}
 					}
 				}
 
-				end=(m_CurrentVoiceInfo.Flags&SharpMikCommon.SF_REVERSE) == SharpMikCommon.SF_REVERSE ?(m_CurrentVoiceInfo.Flags&SharpMikCommon.SF_LOOP) == SharpMikCommon.SF_LOOP?m_IdxlPos:0:(m_CurrentVoiceInfo.Flags&SharpMikCommon.SF_LOOP) == SharpMikCommon.SF_LOOP?m_IdxlEnd:m_IdxSize;
+				end = (m_CurrentVoiceInfo.Flags & Constants.SF_REVERSE) == Constants.SF_REVERSE ? (m_CurrentVoiceInfo.Flags & Constants.SF_LOOP) == Constants.SF_LOOP ? m_IdxlPos : 0 : (m_CurrentVoiceInfo.Flags & Constants.SF_LOOP) == Constants.SF_LOOP ? m_IdxlEnd : m_IdxSize;
 
 				/* if the sample is not blocked... */
-				if((end==m_CurrentVoiceInfo.CurrentSampleIndex)||(m_CurrentVoiceInfo.CurrentIncrement == 0))
+				if ((end == m_CurrentVoiceInfo.CurrentSampleIndex) || (m_CurrentVoiceInfo.CurrentIncrement == 0))
 				{
-					done=0;
+					done = 0;
 				}
-				else 
+				else
 				{
-					done=Math.Min((end-m_CurrentVoiceInfo.CurrentSampleIndex)/m_CurrentVoiceInfo.CurrentIncrement+1,todo);
-					if(done<0) 
+					done = Math.Min((end - m_CurrentVoiceInfo.CurrentSampleIndex) / m_CurrentVoiceInfo.CurrentIncrement + 1, todo);
+					if (done < 0)
 					{
-						done=0;
+						done = 0;
 					}
 				}
 
-				if(done == 0) 
+				if (done == 0)
 				{
 					m_CurrentVoiceInfo.Active = 0;
 					break;
 				}
 
-				endpos=m_CurrentVoiceInfo.CurrentSampleIndex+done*m_CurrentVoiceInfo.CurrentIncrement;
+				endpos = m_CurrentVoiceInfo.CurrentSampleIndex + done * m_CurrentVoiceInfo.CurrentIncrement;
 
 				if (m_CurrentVoiceInfo.Volume != 0)
 				{
 					/* use the 32 bit mixers as often as we can (they're much faster) */
 					if ((m_CurrentVoiceInfo.CurrentSampleIndex < 0x7fffffff) && (endpos < 0x7fffffff))
 					{
-						if ((ModDriver.Mode & SharpMikCommon.DMODE_INTERP) == SharpMikCommon.DMODE_INTERP)
+						if ((ModDriver.Mode & Constants.DMODE_INTERP) == Constants.DMODE_INTERP)
 						{
 							if (m_IsStereo)
 							{
-								if ((m_CurrentVoiceInfo.Panning == SharpMikCommon.PAN_SURROUND) && (ModDriver.Mode & SharpMikCommon.DMODE_SURROUND) == SharpMikCommon.DMODE_SURROUND)
+								if ((m_CurrentVoiceInfo.Panning == Constants.PAN_SURROUND) && (ModDriver.Mode & Constants.DMODE_SURROUND) == Constants.DMODE_SURROUND)
 								{
 									m_CurrentVoiceInfo.CurrentSampleIndex = (long)Mix32SurroundInterp(s, buff, (int)m_CurrentVoiceInfo.CurrentSampleIndex, (int)m_CurrentVoiceInfo.CurrentIncrement, (int)done, place);
 								}
@@ -875,7 +859,7 @@ namespace SharpMik.Drivers
 						}
 						else if (m_IsStereo)
 						{
-							if ((m_CurrentVoiceInfo.Panning == SharpMikCommon.PAN_SURROUND) && (ModDriver.Mode & SharpMikCommon.DMODE_SURROUND) == SharpMikCommon.DMODE_SURROUND)
+							if ((m_CurrentVoiceInfo.Panning == Constants.PAN_SURROUND) && (ModDriver.Mode & Constants.DMODE_SURROUND) == Constants.DMODE_SURROUND)
 							{
 								m_CurrentVoiceInfo.CurrentSampleIndex = Mix32SurroundNormal(s, buff, (int)m_CurrentVoiceInfo.CurrentSampleIndex, (int)m_CurrentVoiceInfo.CurrentIncrement, (int)done, place);
 							}
@@ -923,23 +907,22 @@ namespace SharpMik.Drivers
 					/* update sample position */
 					m_CurrentVoiceInfo.CurrentSampleIndex = endpos;
 				}
-				
-				todo-=(int)done;
+
+				todo -= (int)done;
 				place += (int)(m_IsStereo ? (done << 1) : done);
 			}
 
 		}
 
-
 		uint VC_WriteSamples(sbyte[] buf, uint todo)
 		{
-			int left, portion = 0, count;			
+			int left, portion = 0, count;
 			int t, pan, vol;
-			
+
 			uint bufferPlace = 0;
 			uint bufPlace = 0;
 
-			uint total = todo;
+			var total = todo;
 
 			if (todo > buf.Length)
 			{
@@ -950,12 +933,12 @@ namespace SharpMik.Drivers
 			{
 				if (m_TickLeft == 0)
 				{
-					if ((m_VcMode & SharpMikCommon.DMODE_SOFT_MUSIC) == SharpMikCommon.DMODE_SOFT_MUSIC)
+					if ((m_VcMode & Constants.DMODE_SOFT_MUSIC) == Constants.DMODE_SOFT_MUSIC)
 					{
 						ModPlayer.Player_HandleTick();
 					}
 
-					m_TickLeft = (ModDriver.MixFreq * 125) / (ModDriver.Bpm * 50);
+					m_TickLeft = (ModDriver.MixFrequency * 125) / (ModDriver.Bpm * 50);
 				}
 
 				left = (int)Math.Min(m_TickLeft, todo);
@@ -971,7 +954,7 @@ namespace SharpMik.Drivers
 					count = m_IsStereo ? (portion << 1) : portion;
 
 					Array.Clear(m_VcTickBuf, 0, TICKLSIZE);
-						
+
 					for (t = 0; t < m_VcSoftChannel; t++)
 					{
 						m_CurrentVoiceInfo = m_VoiceInfos[t];
@@ -990,9 +973,9 @@ namespace SharpMik.Drivers
 
 						if (m_CurrentVoiceInfo.Active != 0)
 						{
-							m_CurrentVoiceInfo.CurrentIncrement = ((long)(m_CurrentVoiceInfo.Frequency << FRACBITS)) / ModDriver.MixFreq;
+							m_CurrentVoiceInfo.CurrentIncrement = ((long)(m_CurrentVoiceInfo.Frequency << FRACBITS)) / ModDriver.MixFrequency;
 
-							if ((m_CurrentVoiceInfo.Flags & SharpMikCommon.SF_REVERSE) != 0)
+							if ((m_CurrentVoiceInfo.Flags & Constants.SF_REVERSE) != 0)
 							{
 								m_CurrentVoiceInfo.CurrentIncrement = -m_CurrentVoiceInfo.CurrentIncrement;
 							}
@@ -1000,14 +983,14 @@ namespace SharpMik.Drivers
 							vol = m_CurrentVoiceInfo.Volume;
 							pan = m_CurrentVoiceInfo.Panning;
 
-							m_CurrentVoiceInfo.LeftVolumeOld = m_CurrentVoiceInfo.LeftVolumeFactor; 
+							m_CurrentVoiceInfo.LeftVolumeOld = m_CurrentVoiceInfo.LeftVolumeFactor;
 							m_CurrentVoiceInfo.RightVolumeOld = m_CurrentVoiceInfo.RightVolumeFactor;
 
 							if (m_IsStereo)
 							{
-								if (pan != SharpMikCommon.PAN_SURROUND)
+								if (pan != Constants.PAN_SURROUND)
 								{
-									m_CurrentVoiceInfo.LeftVolumeFactor = (vol * (SharpMikCommon.PAN_RIGHT - pan)) >> 8;
+									m_CurrentVoiceInfo.LeftVolumeFactor = (vol * (Constants.PAN_RIGHT - pan)) >> 8;
 									m_CurrentVoiceInfo.RightVolumeFactor = (vol * pan) >> 8;
 								}
 								else
@@ -1029,12 +1012,12 @@ namespace SharpMik.Drivers
 							{
 								Console.Write("here");
 							}
-							
+
 							AddChannel(m_VcTickBuf, portion);
 
 							if (s_TestModeOn)
 							{
-								Debug.WriteLine("{0}\t{1}",t,m_VcTickBuf[s_TestPlace]);
+								Debug.WriteLine("{0}\t{1}", t, m_VcTickBuf[s_TestPlace]);
 							}
 						}
 					}
@@ -1051,7 +1034,7 @@ namespace SharpMik.Drivers
 						}
 					}
 
-					if ((m_VcMode & SharpMikCommon.DMODE_16BITS) == SharpMikCommon.DMODE_16BITS)
+					if ((m_VcMode & Constants.DMODE_16BITS) == Constants.DMODE_16BITS)
 					{
 						Mix32To16(buf, m_VcTickBuf, count, (int)bufferPlace);
 					}
@@ -1069,13 +1052,12 @@ namespace SharpMik.Drivers
 					else
 					{
 						left -= portion;
-					}					
+					}
 				}
 			}
 
 			return todo;
 		}
-
 
 		int ExtractSample(int[] srce, int size, ref int place)
 		{
@@ -1085,10 +1067,7 @@ namespace SharpMik.Drivers
 			return var;
 		}
 
-		void CheckSample(ref int var, int bound)
-		{
-			var = (var >= bound) ? bound - 1 : (var < -bound) ? -bound : var;
-		}
+		void CheckSample(ref int var, int bound) => var = (var >= bound) ? bound - 1 : (var < -bound) ? -bound : var;
 
 		void PutShortSample(sbyte[] deste, ref int destePlace, int var)
 		{
@@ -1096,17 +1075,14 @@ namespace SharpMik.Drivers
 			deste[destePlace++] = (sbyte)(var >> 8);
 		}
 
-		void PutSample(sbyte[] deste, ref int destePlace, int var)
-		{
-			deste[destePlace++] = (sbyte)var;
-		}
+		void PutSample(sbyte[] deste, ref int destePlace, int var) => deste[destePlace++] = (sbyte)var;
 
 		void Mix32To16(sbyte[] dste, int[] srce, int count, int dstePlace)
 		{
 			unchecked
 			{
 				int x1;
-				int srcePlace = 0;
+				var srcePlace = 0;
 
 				while (count-- != 0)
 				{
@@ -1127,13 +1103,12 @@ namespace SharpMik.Drivers
 			}
 		}
 
-
 		void Mix32To8(sbyte[] dste, int[] srce, int count, int dstePlace)
 		{
 			int x1, x2, x3, x4;
 			int remain;
 
-			int srcePlace = 0;
+			var srcePlace = 0;
 
 			remain = count & 3;
 			for (count >>= 2; count != 0; count--)
@@ -1148,20 +1123,19 @@ namespace SharpMik.Drivers
 				CheckSample(ref x3, 128);
 				CheckSample(ref x4, 128);
 
-				PutSample(dste, ref dstePlace, x1+128);
-				PutSample(dste, ref dstePlace, x2+128);
-				PutSample(dste, ref dstePlace, x3+128);
-				PutSample(dste, ref dstePlace, x4+128);
+				PutSample(dste, ref dstePlace, x1 + 128);
+				PutSample(dste, ref dstePlace, x2 + 128);
+				PutSample(dste, ref dstePlace, x3 + 128);
+				PutSample(dste, ref dstePlace, x4 + 128);
 			}
 
 			while (remain-- != 0)
 			{
 				x1 = ExtractSample(srce, 8, ref srcePlace);
 				CheckSample(ref x1, 128);
-				PutSample(dste, ref dstePlace, x1+128);
+				PutSample(dste, ref dstePlace, x1 + 128);
 			}
 		}
-
 
 		uint VC_SilenceBytes(sbyte[] buf, uint todo)
 		{
@@ -1169,17 +1143,17 @@ namespace SharpMik.Drivers
 
 			sbyte toSet = 0;
 			/* clear the buffer to zero (16 bits signed) or 0x80 (8 bits unsigned) */
-			if ((m_VcMode & SharpMikCommon.DMODE_16BITS) == SharpMikCommon.DMODE_16BITS)
+			if ((m_VcMode & Constants.DMODE_16BITS) == Constants.DMODE_16BITS)
 			{
 				toSet = 0;
 			}
 			else
 			{
-				int value = 0x80;
+				var value = 0x80;
 				toSet = (sbyte)value;
 			}
 
-			for (int i = 0; i < todo; i++)
+			for (var i = 0; i < todo; i++)
 			{
 				buf[i] = toSet;
 			}
@@ -1189,7 +1163,7 @@ namespace SharpMik.Drivers
 
 		public virtual uint VC_WriteBytes(sbyte[] buf, uint todo)
 		{
-			m_IsStereo = (m_VcMode & SharpMikCommon.DMODE_STEREO) == SharpMikCommon.DMODE_STEREO;
+			m_IsStereo = (m_VcMode & Constants.DMODE_STEREO) == Constants.DMODE_STEREO;
 
 			if (m_VcSoftChannel == 0)
 			{
@@ -1200,11 +1174,11 @@ namespace SharpMik.Drivers
 			VC_WriteSamples(buf, todo);
 			todo = samples2bytes(todo);
 
-			if (m_DspProcessor != null)
+			if (DspProcessor != null)
 			{
-				m_DspProcessor.PushData(buf, todo);
+				DspProcessor.PushData(buf, todo);
 			}
-			
+
 			return todo;
 		}
 
@@ -1222,13 +1196,15 @@ namespace SharpMik.Drivers
 		{
 			short handle;
 			/* Find empty slot to put sample address in */
-			for (handle = 0; handle < SharpMikCommon.MAXSAMPLEHANDLES; handle++)
+			for (handle = 0; handle < Constants.MAXSAMPLEHANDLES; handle++)
 			{
 				if (m_Samples[handle] == null)
+				{
 					break;
+				}
 			}
 
-			if (handle == SharpMikCommon.MAXSAMPLEHANDLES)
+			if (handle == Constants.MAXSAMPLEHANDLES)
 			{
 				throw new Exception("Out of handles");
 			}

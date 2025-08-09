@@ -1,19 +1,19 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-	<PropertyGroup>
-		<TargetFramework>net9.0-windows</TargetFramework>
-		<Platform Condition=" '$(Platform)' == '' ">x86</Platform>
-		<OutputType>WinExe</OutputType>
-		<UseWindowsForms>true</UseWindowsForms>
-		<ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
-		<ApplicationIcon>1474_Tape.ico</ApplicationIcon>
-	</PropertyGroup>
-	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
-		<GenerateSerializationAssemblies>On</GenerateSerializationAssemblies>
-	</PropertyGroup>
-	<ItemGroup>
-		<Content Include="1474_Tape.ico" />
-	</ItemGroup>
-	<ItemGroup>
-		<ProjectReference Include="..\SharpMik\SharpMik.csproj" />
-	</ItemGroup>
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows7.0</TargetFramework>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <OutputType>WinExe</OutputType>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
+    <ApplicationIcon>1474_Tape.ico</ApplicationIcon>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <GenerateSerializationAssemblies>On</GenerateSerializationAssemblies>
+  </PropertyGroup>
+  <ItemGroup>
+    <Content Include="1474_Tape.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SharpMik\SharpMik.csproj" />
+  </ItemGroup>
 </Project>

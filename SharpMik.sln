@@ -21,9 +21,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommandTest", "CommandTest\
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
 	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
 		.gitignore = .gitignore
 		README.md = README.md
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpMikNAudio", "SharpMik\SharpMikNAudio.csproj", "{1CCB1915-28A0-5445-5A21-2FDDFFD18F7C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -47,6 +50,10 @@ Global
 		{AEF78023-6B81-4274-824E-973BE9F3F101}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AEF78023-6B81-4274-824E-973BE9F3F101}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AEF78023-6B81-4274-824E-973BE9F3F101}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1CCB1915-28A0-5445-5A21-2FDDFFD18F7C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1CCB1915-28A0-5445-5A21-2FDDFFD18F7C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1CCB1915-28A0-5445-5A21-2FDDFFD18F7C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1CCB1915-28A0-5445-5A21-2FDDFFD18F7C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -57,6 +64,7 @@ Global
 		{0358F758-12AA-4CC6-B2D9-EA41EC149204} = {93A87F23-A185-48D0-9DA1-EBBEB77B2775}
 		{C7921497-706B-4EDD-88A0-BE936017B360} = {0DC1E338-CC1B-4316-9831-02E0AD7DC1D5}
 		{AEF78023-6B81-4274-824E-973BE9F3F101} = {93A87F23-A185-48D0-9DA1-EBBEB77B2775}
+		{1CCB1915-28A0-5445-5A21-2FDDFFD18F7C} = {B46595F2-3621-4BD4-A250-60099B39CE4B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {8A2626C3-BF5B-4838-9BEA-63AC488001D8}

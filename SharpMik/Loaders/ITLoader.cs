@@ -1,14 +1,13 @@
-﻿using System;
-
-using SharpMik.Interfaces;
-using SharpMik.Extentions;
-using System.IO;
 using SharpMik.Attributes;
 using SharpMik.Common;
+using SharpMik.Extensions;
+using SharpMik.Interfaces;
+using System;
+using System.IO;
 
 namespace SharpMik.Loaders
 {
-	[ModFileExtentions(".it")]
+	[ModFileExtensions(".it")]
 	public class ITLoader : IModLoader
 	{
 		/* header */
@@ -133,7 +132,7 @@ namespace SharpMik.Loaders
 		static int numtrk;
 		static uint old_effect;     /* if set, use S3M old-effects stuffs */
 
-		static readonly string[] IT_Version =[
+		static readonly string[] IT_Version = [
 			"ImpulseTracker  .  ",
 			"Compressed ImpulseTracker  .  ",
 			"ImpulseTracker 2.14p3",
@@ -217,23 +216,23 @@ namespace SharpMik.Loaders
 
 					if ((mask[ch] & 1) != 0)
 					{
-						m_Reader.Read_byte();
+						_ = m_Reader.Read_byte();
 					}
 
 					if ((mask[ch] & 2) != 0)
 					{
-						m_Reader.Read_byte();
+						_ = m_Reader.Read_byte();
 					}
 
 					if ((mask[ch] & 4) != 0)
 					{
-						m_Reader.Read_byte();
+						_ = m_Reader.Read_byte();
 					}
 
 					if ((mask[ch] & 8) != 0)
 					{
-						m_Reader.Read_byte();
-						m_Reader.Read_byte();
+						_ = m_Reader.Read_byte();
+						_ = m_Reader.Read_byte();
 					}
 				}
 			} while (row < patrows);
@@ -467,7 +466,7 @@ namespace SharpMik.Loaders
 
 		void LoadMidiString(char[] dest)
 		{
-			m_Reader.Read_bytes(dest, 32);
+			_ = m_Reader.Read_bytes(dest, 32);
 			var cur = 0;
 
 			for (var i = 0; i < 32 && dest[i] != 0; i++)
@@ -497,8 +496,8 @@ namespace SharpMik.Loaders
 				ushort dat;
 				var midiline = new char[33];
 				dat =
-				dat = m_Reader.Read_Intel_ushort();
-				m_Reader.Seek((8 * dat) + 0x120, SeekOrigin.Current);
+				_ = m_Reader.Read_Intel_ushort();
+				_ = m_Reader.Seek((8 * dat) + 0x120, SeekOrigin.Current);
 
 				/* read midi macros */
 				for (i = 0; i < Constants.UF_MAXMACRO; i++)
@@ -572,7 +571,7 @@ namespace SharpMik.Loaders
 				node.tick[lp] = m_Reader.Read_Intel_ushort();
 			}
 
-			m_Reader.Read_byte();
+			_ = m_Reader.Read_byte();
 		}
 
 		static void IT_ProcessEnvelopeVol(ITNode node, Instrument d)
@@ -693,9 +692,9 @@ namespace SharpMik.Loaders
 			filters = false;
 
 			/* try to read module header */
-			m_Reader.Read_Intel_uint(); /* kill the 4 byte header */
+			_ = m_Reader.Read_Intel_uint(); /* kill the 4 byte header */
 			mh.SongName = m_Reader.Read_String(26);
-			m_Reader.Read_bytes(mh.blank01, 2);
+			_ = m_Reader.Read_bytes(mh.blank01, 2);
 			mh.ordnum = m_Reader.Read_Intel_ushort();
 			mh.insnum = m_Reader.Read_Intel_ushort();
 			mh.smpnum = m_Reader.Read_Intel_ushort();
@@ -712,9 +711,9 @@ namespace SharpMik.Loaders
 			mh.zerobyte = m_Reader.Read_byte();
 			mh.msglength = m_Reader.Read_Intel_ushort();
 			mh.msgoffset = m_Reader.Read_Intel_uint();
-			m_Reader.Read_bytes(mh.blank02, 4);
-			m_Reader.Read_bytes(mh.pantable, 64);
-			m_Reader.Read_bytes(mh.voltable, 64);
+			_ = m_Reader.Read_bytes(mh.blank02, 4);
+			_ = m_Reader.Read_bytes(mh.pantable, 64);
+			_ = m_Reader.Read_bytes(mh.voltable, 64);
 
 			if (m_Reader.isEOF())
 			{
@@ -824,7 +823,7 @@ namespace SharpMik.Loaders
 				m_Module.ChannelVolume[j] = mh.voltable[j];
 			}
 
-			var test = m_Reader.Tell();
+			_ = m_Reader.Tell();
 
 			/* read the order data */
 			m_Module.Positions = new ushort[mh.ordnum];
@@ -851,7 +850,7 @@ namespace SharpMik.Loaders
 			paraptr = new uint[mh.insnum + mh.smpnum + m_Module.NumPatterns];
 
 			/* read the instrument, sample, and pattern parapointers */
-			m_Reader.Read_Intel_uints(paraptr, mh.insnum + mh.smpnum + m_Module.NumPatterns);
+			_ = m_Reader.Read_Intel_uints(paraptr, mh.insnum + mh.smpnum + m_Module.NumPatterns);
 
 			if (m_Reader.isEOF())
 			{
@@ -882,7 +881,7 @@ namespace SharpMik.Loaders
 			/* Check for and load song comment */
 			if ((mh.special & 1) != 0 && (mh.cwt >= 0x104) && (mh.msglength != 0))
 			{
-				m_Reader.Seek((int)mh.msgoffset, SeekOrigin.Begin);
+				_ = m_Reader.Seek((int)mh.msgoffset, SeekOrigin.Begin);
 
 				if (!ReadComment(mh.msglength))
 				{
@@ -906,7 +905,7 @@ namespace SharpMik.Loaders
 				var s = new ITSAMPLE();
 
 				/* seek to sample position */
-				m_Reader.Seek((int)(paraptr[mh.insnum + t] + 4), SeekOrigin.Begin);
+				_ = m_Reader.Seek((int)(paraptr[mh.insnum + t] + 4), SeekOrigin.Begin);
 
 				/* load sample info */
 
@@ -1028,7 +1027,7 @@ namespace SharpMik.Loaders
 					var ih = new ITINSTHEADER();
 
 					/* seek to instrument position */
-					m_Reader.Seek((int)(paraptr[t] + 4), SeekOrigin.Begin);
+					_ = m_Reader.Seek((int)(paraptr[t] + 4), SeekOrigin.Begin);
 					/* load instrument info */
 					ih.filename = m_Reader.Read_String(12);
 					ih.zerobyte = m_Reader.Read_byte();
@@ -1040,7 +1039,7 @@ namespace SharpMik.Loaders
 						ih.vol.end = m_Reader.Read_byte();
 						ih.vol.susbeg = m_Reader.Read_byte();
 						ih.vol.susend = m_Reader.Read_byte();
-						m_Reader.Read_Intel_ushort();
+						_ = m_Reader.Read_Intel_ushort();
 						ih.fadeout = m_Reader.Read_Intel_ushort();
 						ih.nna = m_Reader.Read_byte();
 						ih.dnc = m_Reader.Read_byte();
@@ -1062,15 +1061,15 @@ namespace SharpMik.Loaders
 
 					ih.trkvers = m_Reader.Read_Intel_ushort();
 					ih.NumSamples = m_Reader.Read_byte();
-					m_Reader.Read_byte();
+					_ = m_Reader.Read_byte();
 					ih.name = m_Reader.Read_String(26);
-					m_Reader.Read_bytes(ih.blank01, 6);
-					m_Reader.Read_Intel_ushorts(ih.samptable, ITNOTECNT);
+					_ = m_Reader.Read_bytes(ih.blank01, 6);
+					_ = m_Reader.Read_Intel_ushorts(ih.samptable, ITNOTECNT);
 
 					if (mh.cwt < 0x200)
 					{
 						/* load IT 1xx volume envelope */
-						m_Reader.Read_bytes(ih.volenv, 200);
+						_ = m_Reader.Read_bytes(ih.volenv, 200);
 						for (lp = 0; lp < ITENVCNT; lp++)
 						{
 							ih.oldvoltick[lp] = m_Reader.Read_byte();
@@ -1252,8 +1251,8 @@ namespace SharpMik.Loaders
 				/* seek to pattern position */
 				if (paraptr[mh.insnum + mh.smpnum + t] != 0)  /* 0 . empty 64 row pattern */
 				{
-					m_Reader.Seek((int)paraptr[mh.insnum + mh.smpnum + t], SeekOrigin.Begin);
-					m_Reader.Read_Intel_ushort();
+					_ = m_Reader.Seek((int)paraptr[mh.insnum + mh.smpnum + t], SeekOrigin.Begin);
+					_ = m_Reader.Read_Intel_ushort();
 					/* read pattern length (# of rows)
 					   Impulse Tracker never creates patterns with less than 32 rows,
 					   but some other trackers do, so we only check for more than 256
@@ -1265,7 +1264,7 @@ namespace SharpMik.Loaders
 						return false;
 					}
 
-					m_Reader.Read_Intel_uint();
+					_ = m_Reader.Read_Intel_uint();
 					if (IT_GetNumChannels(packlen))
 					{
 						return false;
@@ -1296,7 +1295,6 @@ namespace SharpMik.Loaders
 
 			for (t = 0; t < m_Module.NumPatterns; t++)
 			{
-				ushort packlen;
 
 				/* seek to pattern position */
 				if (paraptr[mh.insnum + mh.smpnum + t] == 0)
@@ -1317,10 +1315,10 @@ namespace SharpMik.Loaders
 				}
 				else
 				{
-					m_Reader.Seek((int)paraptr[mh.insnum + mh.smpnum + t], SeekOrigin.Begin);
-					packlen = m_Reader.Read_Intel_ushort();
+					_ = m_Reader.Seek((int)paraptr[mh.insnum + mh.smpnum + t], SeekOrigin.Begin);
+					_ = m_Reader.Read_Intel_ushort();
 					m_Module.PatternRows[t] = m_Reader.Read_Intel_ushort();
-					m_Reader.Read_Intel_uint();
+					_ = m_Reader.Read_Intel_uint();
 					if (!IT_ReadPattern(m_Module.PatternRows[t]))
 					{
 						return false;

@@ -42,6 +42,9 @@
 			tbSongPosition = new System.Windows.Forms.TrackBar();
 			pgCurrentlyPlaying = new System.Windows.Forms.PropertyGrid();
 			scMain = new System.Windows.Forms.SplitContainer();
+			lblSongPosition = new System.Windows.Forms.Label();
+			lblPatternRowNumber = new System.Windows.Forms.Label();
+			lblCurrentPattern = new System.Windows.Forms.Label();
 			menuToolStrip.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)tbSongPosition).BeginInit();
 			((System.ComponentModel.ISupportInitialize)scMain).BeginInit();
@@ -141,10 +144,10 @@
 			// 
 			listBox1.Dock = System.Windows.Forms.DockStyle.Fill;
 			listBox1.FormattingEnabled = true;
-			listBox1.Location = new System.Drawing.Point(0, 0);
+			listBox1.Location = new System.Drawing.Point(0, 45);
 			listBox1.Margin = new System.Windows.Forms.Padding(0);
 			listBox1.Name = "listBox1";
-			listBox1.Size = new System.Drawing.Size(515, 491);
+			listBox1.Size = new System.Drawing.Size(515, 446);
 			listBox1.TabIndex = 2;
 			// 
 			// tbSongPosition
@@ -178,6 +181,9 @@
 			// scMain.Panel1
 			// 
 			scMain.Panel1.Controls.Add(listBox1);
+			scMain.Panel1.Controls.Add(lblSongPosition);
+			scMain.Panel1.Controls.Add(lblPatternRowNumber);
+			scMain.Panel1.Controls.Add(lblCurrentPattern);
 			// 
 			// scMain.Panel2
 			// 
@@ -186,6 +192,39 @@
 			scMain.SplitterDistance = 515;
 			scMain.SplitterWidth = 8;
 			scMain.TabIndex = 5;
+			// 
+			// lblSongPosition
+			// 
+			lblSongPosition.AutoSize = true;
+			lblSongPosition.Dock = System.Windows.Forms.DockStyle.Top;
+			lblSongPosition.Location = new System.Drawing.Point(0, 30);
+			lblSongPosition.Margin = new System.Windows.Forms.Padding(4);
+			lblSongPosition.Name = "lblSongPosition";
+			lblSongPosition.Size = new System.Drawing.Size(38, 15);
+			lblSongPosition.TabIndex = 5;
+			lblSongPosition.Text = "label1";
+			// 
+			// lblPatternRowNumber
+			// 
+			lblPatternRowNumber.AutoSize = true;
+			lblPatternRowNumber.Dock = System.Windows.Forms.DockStyle.Top;
+			lblPatternRowNumber.Location = new System.Drawing.Point(0, 15);
+			lblPatternRowNumber.Margin = new System.Windows.Forms.Padding(4);
+			lblPatternRowNumber.Name = "lblPatternRowNumber";
+			lblPatternRowNumber.Size = new System.Drawing.Size(38, 15);
+			lblPatternRowNumber.TabIndex = 4;
+			lblPatternRowNumber.Text = "label1";
+			// 
+			// lblCurrentPattern
+			// 
+			lblCurrentPattern.AutoSize = true;
+			lblCurrentPattern.Dock = System.Windows.Forms.DockStyle.Top;
+			lblCurrentPattern.Location = new System.Drawing.Point(0, 0);
+			lblCurrentPattern.Margin = new System.Windows.Forms.Padding(4);
+			lblCurrentPattern.Name = "lblCurrentPattern";
+			lblCurrentPattern.Size = new System.Drawing.Size(38, 15);
+			lblCurrentPattern.TabIndex = 3;
+			lblCurrentPattern.Text = "label1";
 			// 
 			// MainForm
 			// 
@@ -204,6 +243,7 @@
 			menuToolStrip.PerformLayout();
 			((System.ComponentModel.ISupportInitialize)tbSongPosition).EndInit();
 			scMain.Panel1.ResumeLayout(false);
+			scMain.Panel1.PerformLayout();
 			scMain.Panel2.ResumeLayout(false);
 			((System.ComponentModel.ISupportInitialize)scMain).EndInit();
 			scMain.ResumeLayout(false);
@@ -228,6 +268,9 @@
 		private System.Windows.Forms.TrackBar tbSongPosition;
 		private System.Windows.Forms.PropertyGrid pgCurrentlyPlaying;
 		private System.Windows.Forms.SplitContainer scMain;
+		private System.Windows.Forms.Label lblCurrentPattern;
+		private System.Windows.Forms.Label lblPatternRowNumber;
+		private System.Windows.Forms.Label lblSongPosition;
 	}
 }
 

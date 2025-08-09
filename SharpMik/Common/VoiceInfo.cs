@@ -1,4 +1,4 @@
-﻿namespace SharpMik.Common
+namespace SharpMik.Common
 {
 	/* This structure is used to query current playing voices status */
 	public class VoiceInfo

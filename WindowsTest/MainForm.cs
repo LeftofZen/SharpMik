@@ -1,11 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Windows.Forms;
-using SharpMik.Player;
-using SharpMik.Drivers;
-
-using System.IO;
 using SharpMik.Common;
+using SharpMik.Drivers;
+using SharpMik.Player;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Windows.Forms;
 
 namespace SharpMilk
 {
@@ -40,11 +39,10 @@ namespace SharpMilk
 			{
 				var place = (int)(100.0f * MikMod.GetProgress());
 
-				MethodInvoker action = delegate
-				{
-					tbSongPosition.Value = place;
-				};
-				tbSongPosition.BeginInvoke(action);
+				_ = tbSongPosition.BeginInvoke(() => tbSongPosition.Value = place);
+				_ = lblCurrentPattern.BeginInvoke(() => lblCurrentPattern.Text = $"NumRowsOnCurrentPattern: {MikMod.NumRowsOnCurrentPattern}");
+				_ = lblPatternRowNumber.BeginInvoke(() => lblPatternRowNumber.Text = $"Current Pattern Row Number: {MikMod.Playback_CurrentPatternRowNumber}");
+				_ = lblSongPosition.BeginInvoke(() => lblSongPosition.Text = $"Current Pattern: {MikMod.Playback_CurrentPattern}");
 			}
 		}
 
@@ -57,7 +55,7 @@ namespace SharpMilk
 			ModDriver.Mode = (ushort)(ModDriver.Mode | Constants.DMODE_NOISEREDUCTION);
 			try
 			{
-				m_Player.Init<NaudioDriver>("");
+				_ = m_Player.Init<NaudioDriver>("");
 
 				var start = DateTime.Now;
 			}
@@ -67,20 +65,20 @@ namespace SharpMilk
 			}
 		}
 
-		private void OpenMod_Click(object sender, EventArgs e)
+		void OpenMod_Click(object sender, EventArgs e)
 		{
 			var dialog = new OpenFileDialog();
-			var extentions = Helpers.ModFileExtensions;
+			var extensions = Helpers.ModFileExtensions;
 			var filters = "All (*.*)|*.*|";
 
-			foreach (var item in extentions)
+			foreach (var item in extensions)
 			{
 				filters += "(*" + item + ")|*" + item + "|";
 			}
 
 			if (filters.Length > 0)
 			{
-				dialog.Filter = filters.Substring(0, filters.Length - 1);
+				dialog.Filter = filters[..^1];
 			}
 
 			var result = dialog.ShowDialog();
@@ -93,6 +91,8 @@ namespace SharpMilk
 				{
 					tslCurrentlyPlaying.Text = m_Mod.SongName;
 					pgCurrentlyPlaying.SelectedObject = m_Mod;
+
+					UpdatePatternChannelList();
 				}
 
 				PlayPauseMod.Enabled = true;
@@ -105,7 +105,7 @@ namespace SharpMilk
 		}
 
 		bool m_WasPlaying;
-		private void PlayPauseMod_Click(object sender, EventArgs e)
+		void PlayPauseMod_Click(object sender, EventArgs e)
 		{
 			if (m_Playing)
 			{
@@ -132,7 +132,7 @@ namespace SharpMilk
 			}
 		}
 
-		private void StopMod_Click(object sender, EventArgs e)
+		void StopMod_Click(object sender, EventArgs e)
 		{
 			m_Playing = false;
 			ModPlayer.Player_Stop();
@@ -141,10 +141,10 @@ namespace SharpMilk
 			StopMod.Enabled = false;
 		}
 
-		List<string> m_FileList = new();
+		List<string> m_FileList = [];
 		int place;
 
-		private void toolStripButton1_Click(object sender, EventArgs e)
+		void toolStripButton1_Click(object sender, EventArgs e)
 		{
 			var dialog = new FolderBrowserDialog();
 			var result = dialog.ShowDialog();
@@ -160,7 +160,7 @@ namespace SharpMilk
 					{
 						m_FileList.Add(name);
 						var shortName = Path.GetFileNameWithoutExtension(name);
-						listBox1.Items.Add(shortName + " (" + name + ")");
+						_ = listBox1.Items.Add(shortName + " (" + name + ")");
 					}
 				}
 
@@ -173,7 +173,7 @@ namespace SharpMilk
 			}
 		}
 
-		private void Next()
+		void Next()
 		{
 			if (m_FileList.Count > 0)
 			{
@@ -193,7 +193,7 @@ namespace SharpMilk
 			}
 		}
 
-		private void Prev()
+		void Prev()
 		{
 			place--;
 
@@ -208,7 +208,7 @@ namespace SharpMilk
 			}
 		}
 
-		private bool Play()
+		bool Play()
 		{
 			if (m_FileList.Count == 0 || place < 0 || place >= m_FileList.Count)
 			{
@@ -241,13 +241,35 @@ namespace SharpMilk
 			ModDriver.MikMod_Exit();
 		}
 
-		private void tsbNext_Click(object sender, EventArgs e)
+		void tsbNext_Click(object sender, EventArgs e)
 			=> Next();
 
-		private void tsbPrevious_Click(object sender, EventArgs e)
+		void tsbPrevious_Click(object sender, EventArgs e)
 			=> Prev();
 
-		private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+		void Form1_FormClosing(object sender, FormClosingEventArgs e)
 			=> ExitApp();
+
+		// Clear the list first
+		void UpdatePatternChannelList()
+		{
+			listBox1.Items.Clear();
+
+			if (m_Mod != null && m_Mod.Patterns != null && m_Mod.NumChannels > 0)
+			{
+				//for (int ch = 0; ch < m_Mod.NumChannels; ch++)
+				//{
+				//	// Each pattern's tracks are stored sequentially
+				//	int patternIndex = ch; // For pattern 0, offset is 0
+				//	ushort trackIndex = m_Mod.Patterns[patternIndex];
+				//	listBox1.Items.Add($"Channel {ch}: Track {trackIndex}");
+				//}
+				var patternRows = m_Mod.Tracks[m_Mod.Patterns[0]];
+				foreach (var row in patternRows)
+				{
+					_ = listBox1.Items.Add(row);
+				}
+			}
+		}
 	}
 }

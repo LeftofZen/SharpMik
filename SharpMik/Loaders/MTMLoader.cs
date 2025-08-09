@@ -1,12 +1,11 @@
-﻿using System;
-
-using SharpMik.Interfaces;
 using SharpMik.Attributes;
 using SharpMik.Common;
+using SharpMik.Interfaces;
+using System;
 
 namespace SharpMik.Loaders
 {
-	[ModFileExtentions(".mtm")]
+	[ModFileExtensions(".mtm")]
 	public class MTMLoader : IModLoader
 	{
 		/*========== Module structure */
@@ -148,7 +147,7 @@ namespace SharpMik.Loaders
 			mh.attribute = m_Reader.Read_byte();
 			mh.beatspertrack = m_Reader.Read_byte();
 			mh.numchannels = m_Reader.Read_byte();
-			m_Reader.Read_bytes(mh.panpos, 32);
+			_ = m_Reader.Read_bytes(mh.panpos, 32);
 
 			if (m_Reader.isEOF())
 			{
@@ -228,7 +227,7 @@ namespace SharpMik.Loaders
 
 			for (; t < 128; t++)
 			{
-				m_Reader.Read_byte();
+				_ = m_Reader.Read_byte();
 			}
 
 			if (m_Reader.isEOF())
@@ -264,7 +263,7 @@ namespace SharpMik.Loaders
 
 			for (t = 0; t < m_Module.NumPatterns; t++)
 			{
-				m_Reader.Read_Intel_ushorts(pat, 32);
+				_ = m_Reader.Read_Intel_ushorts(pat, 32);
 				for (u = 0; u < m_Module.NumChannels; u++)
 				{
 					m_Module.Patterns[((long)t * m_Module.NumChannels) + u] = pat[u];

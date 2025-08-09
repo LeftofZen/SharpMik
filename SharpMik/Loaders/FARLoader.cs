@@ -1,12 +1,12 @@
-﻿using System;
-using SharpMik.Interfaces;
-using System.IO;
 using SharpMik.Attributes;
 using SharpMik.Common;
+using SharpMik.Interfaces;
+using System;
+using System.IO;
 
 namespace SharpMik.Loaders
 {
-	[ModFileExtentions(".far")]
+	[ModFileExtensions(".far")]
 	public class FARLoader : IModLoader
 	{
 		/*========== Module structure */
@@ -162,16 +162,16 @@ namespace SharpMik.Loaders
 			var smap = new byte[8];
 
 			/* try to read module header (first part) */
-			m_Reader.Read_bytes(mh1.id, 4);
+			_ = m_Reader.Read_bytes(mh1.id, 4);
 			mh1.SongName = m_Reader.Read_String(40);
-			m_Reader.Read_bytes(mh1.blah, 3);
+			_ = m_Reader.Read_bytes(mh1.blah, 3);
 			mh1.headerlen = m_Reader.Read_Intel_ushort();
 			mh1.version = m_Reader.Read_byte();
-			m_Reader.Read_bytes(mh1.onoff, 16);
-			m_Reader.Read_bytes(mh1.edit1, 9);
+			_ = m_Reader.Read_bytes(mh1.onoff, 16);
+			_ = m_Reader.Read_bytes(mh1.edit1, 9);
 			mh1.speed = m_Reader.Read_byte();
-			m_Reader.Read_bytes(mh1.panning, 16);
-			m_Reader.Read_bytes(mh1.edit2, 4);
+			_ = m_Reader.Read_bytes(mh1.panning, 16);
+			_ = m_Reader.Read_bytes(mh1.edit2, 4);
 			mh1.stlen = m_Reader.Read_Intel_ushort();
 
 			/* init modfile data */
@@ -197,11 +197,11 @@ namespace SharpMik.Loaders
 			}
 
 			/* try to read module header (second part) */
-			m_Reader.Read_bytes(mh2.orders, 256);
+			_ = m_Reader.Read_bytes(mh2.orders, 256);
 			mh2.numpat = m_Reader.Read_byte();
 			mh2.snglen = m_Reader.Read_byte();
 			mh2.loopto = m_Reader.Read_byte();
-			m_Reader.Read_Intel_ushorts(mh2.patsiz, 256);
+			_ = m_Reader.Read_Intel_ushorts(mh2.patsiz, 256);
 
 			m_Module.NumPositions = mh2.snglen;
 			m_Module.Positions = new ushort[m_Module.NumPositions];
@@ -232,7 +232,7 @@ namespace SharpMik.Loaders
 			m_Module.NumTracks = (ushort)(m_Module.NumPatterns * m_Module.NumChannels);
 
 			/* seek across eventual new data */
-			m_Reader.Seek(mh1.headerlen - (869 + mh1.stlen), SeekOrigin.Current);
+			_ = m_Reader.Seek(mh1.headerlen - (869 + mh1.stlen), SeekOrigin.Current);
 
 			/* alloc track and pattern structures */
 			m_Module.AllocTracks();
@@ -240,8 +240,6 @@ namespace SharpMik.Loaders
 
 			for (t = 0; t < m_Module.NumPatterns; t++)
 			{
-				byte rows = 0, tempo;
-
 				for (var i = 0; i < pat.Length; i++)
 				{
 					pat[i].Clear();
@@ -249,8 +247,8 @@ namespace SharpMik.Loaders
 
 				if (mh2.patsiz[t] != 0)
 				{
-					rows = m_Reader.Read_byte();
-					tempo = m_Reader.Read_byte();
+					var rows = m_Reader.Read_byte();
+					_ = m_Reader.Read_byte();
 
 					/* file often allocates 64 rows even if there are less in pattern */
 					if (mh2.patsiz[t] < 2 + (rows * 16 * 4))
@@ -298,7 +296,7 @@ namespace SharpMik.Loaders
 			}
 
 			/* read sample map */
-			m_Reader.Read_bytes(smap, 8);
+			_ = m_Reader.Read_bytes(smap, 8);
 
 			/* count number of samples used */
 			m_Module.NumInstruments = 0;
@@ -351,7 +349,7 @@ namespace SharpMik.Loaders
 					}
 
 					q.seekpos = (uint)m_Reader.Tell();
-					m_Reader.Seek((int)q.length, SeekOrigin.Current);
+					_ = m_Reader.Seek((int)q.length, SeekOrigin.Current);
 				}
 				else
 				{

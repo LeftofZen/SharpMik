@@ -1,13 +1,12 @@
-﻿using SharpMik.Interfaces;
-using System.IO;
-
-using SharpMik.Extentions;
 using SharpMik.Attributes;
 using SharpMik.Common;
+using SharpMik.Extensions;
+using SharpMik.Interfaces;
+using System.IO;
 
 namespace SharpMik.Loaders
 {
-	[ModFileExtentions(".s3m")]
+	[ModFileExtensions(".s3m")]
 	public class S3MLoader : IModLoader
 	{
 		/* header */
@@ -94,7 +93,7 @@ namespace SharpMik.Loaders
 		{
 			string id;
 
-			m_Reader.Seek(0x02c, SeekOrigin.Begin);
+			_ = m_Reader.Seek(0x02c, SeekOrigin.Begin);
 			id = m_Reader.Read_String(4);
 
 			return id == "SCRM";
@@ -149,19 +148,19 @@ namespace SharpMik.Loaders
 
 					if ((flag & 32) != 0)
 					{
-						m_Reader.Read_byte();
-						m_Reader.Read_byte();
+						_ = m_Reader.Read_byte();
+						_ = m_Reader.Read_byte();
 					}
 
 					if ((flag & 64) != 0)
 					{
-						m_Reader.Read_byte();
+						_ = m_Reader.Read_byte();
 					}
 
 					if ((flag & 128) != 0)
 					{
-						m_Reader.Read_byte();
-						m_Reader.Read_byte();
+						_ = m_Reader.Read_byte();
+						_ = m_Reader.Read_byte();
 					}
 				}
 				else
@@ -291,7 +290,7 @@ namespace SharpMik.Loaders
 			mh.SongName = m_Reader.Read_String(28);
 			mh.t1a = m_Reader.Read_byte();
 			mh.type = m_Reader.Read_byte();
-			m_Reader.Read_bytes(mh.unused1, 2);
+			_ = m_Reader.Read_bytes(mh.unused1, 2);
 			mh.ordnum = m_Reader.Read_Intel_ushort();
 			mh.insnum = m_Reader.Read_Intel_ushort();
 			mh.patnum = m_Reader.Read_Intel_ushort();
@@ -305,9 +304,9 @@ namespace SharpMik.Loaders
 			mh.mastermult = m_Reader.Read_byte();
 			mh.ultraclick = m_Reader.Read_byte();
 			mh.pantable = m_Reader.Read_byte();
-			m_Reader.Read_bytes(mh.unused2, 8);
+			_ = m_Reader.Read_bytes(mh.unused2, 8);
 			mh.special = m_Reader.Read_Intel_ushort();
-			m_Reader.Read_bytes(mh.channels, 32);
+			_ = m_Reader.Read_bytes(mh.channels, 32);
 
 			if (m_Reader.isEOF())
 			{
@@ -393,13 +392,13 @@ namespace SharpMik.Loaders
 			paraptr = new ushort[m_Module.NumInstruments + m_Module.NumPatterns];
 
 			/* read the instrument+pattern parapointers */
-			m_Reader.Read_Intel_ushorts(paraptr, m_Module.NumInstruments + m_Module.NumPatterns);
+			_ = m_Reader.Read_Intel_ushorts(paraptr, m_Module.NumInstruments + m_Module.NumPatterns);
 
 			if (mh.pantable == 252)
 			{
 				/* read the panning table (ST 3.2 addition.  See below for further
 				   portions of channel panning [past reampper]). */
-				m_Reader.Read_bytes(pan, 32);
+				_ = m_Reader.Read_bytes(pan, 32);
 			}
 
 			if (m_Reader.isEOF())
@@ -417,7 +416,7 @@ namespace SharpMik.Loaders
 				var s = new S3MSAMPLE();
 
 				/* seek to instrument position */
-				m_Reader.Seek(paraptr[t] << 4, SeekOrigin.Begin);
+				_ = m_Reader.Seek(paraptr[t] << 4, SeekOrigin.Begin);
 
 				/* and load sample info */
 				s.type = m_Reader.Read_byte();
@@ -432,7 +431,7 @@ namespace SharpMik.Loaders
 				s.pack = m_Reader.Read_byte();
 				s.flags = m_Reader.Read_byte();
 				s.c2spd = m_Reader.Read_Intel_uint();
-				m_Reader.Read_bytes(s.unused, 12);
+				_ = m_Reader.Read_bytes(s.unused, 12);
 				s.sampname = m_Reader.Read_String(28);
 				s.scrs = m_Reader.Read_String(4);
 
@@ -485,7 +484,7 @@ namespace SharpMik.Loaders
 			for (t = 0; t < m_Module.NumPatterns; t++)
 			{
 				/* seek to pattern position (+2 skip pattern length) */
-				m_Reader.Seek(((paraptr[m_Module.NumInstruments + t]) << 4) + 2, SeekOrigin.Begin);
+				_ = m_Reader.Seek(((paraptr[m_Module.NumInstruments + t]) << 4) + 2, SeekOrigin.Begin);
 				if (!S3M_GetNumChannels())
 				{
 					return false;
@@ -538,7 +537,7 @@ namespace SharpMik.Loaders
 			for (t = 0; t < m_Module.NumPatterns; t++)
 			{
 				/* seek to pattern position (+2 skip pattern length) */
-				m_Reader.Seek(((paraptr[m_Module.NumInstruments + t]) << 4) + 2, SeekOrigin.Begin);
+				_ = m_Reader.Seek(((paraptr[m_Module.NumInstruments + t]) << 4) + 2, SeekOrigin.Begin);
 				if (!S3M_ReadPattern())
 				{
 					return false;
@@ -555,7 +554,7 @@ namespace SharpMik.Loaders
 
 		public override string LoadTitle()
 		{
-			m_Reader.Seek(0, SeekOrigin.Begin);
+			_ = m_Reader.Seek(0, SeekOrigin.Begin);
 			return m_Reader.Read_String(28);
 		}
 	}

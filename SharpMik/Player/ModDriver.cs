@@ -1,6 +1,6 @@
-﻿using System;
 using SharpMik.Common;
 using SharpMik.Interfaces;
+using System;
 
 namespace SharpMik.Player
 {
@@ -10,21 +10,18 @@ namespace SharpMik.Player
 	 * 
 	 * Been trying to keep the user accessible variables hidden with accessors to access them.
 	 * 
-	 * Also strangly contains the MikMod_* functions that do alot of setting up.
+	 * Also strangely contains the MikMod_* functions that do a lot of setting up.
 	 * 
 	 */
-	public class ModDriver
+	public static class ModDriver
 	{
 		#region private (static) variables
-		private static IModDriver m_Driver;
 
 		internal static byte md_numchn;
 		internal static byte md_sngchn;
 		internal static byte md_sfxchn;
 
 		static byte md_hardchn;
-		static byte md_softchn;
-		static ushort md_bpm = 125;
 		static byte[] sfxinfo;
 
 		static byte md_pansep = 128;    /* 128 == 100% (full left/right) */
@@ -42,7 +39,7 @@ namespace SharpMik.Player
 			set { md_pansep = value < 129 ? value : (byte)128; }
 		}
 
-		public static byte SoftwareChannel => md_softchn;
+		public static byte SoftwareChannel { get; private set; }
 
 		public static int ChannelCount
 		{
@@ -55,11 +52,7 @@ namespace SharpMik.Player
 						Constants.DMODE_SOFT_SNDFX;
 
 		public static ushort MixFrequency { get; set; } = 44100;
-		public static ushort Bpm
-		{
-			get { return md_bpm; }
-			set { md_bpm = value; }
-		}
+		public static ushort Bpm { get; set; } = 125;
 
 		public static byte Reverb { get; set; }
 
@@ -81,21 +74,21 @@ namespace SharpMik.Player
 			set { md_musicvolume = value < 129 ? value : (byte)128; }
 		}
 
-		public static IModDriver Driver => m_Driver;
+		public static IModDriver Driver { get; private set; }
 
 		#endregion
 
 		public static T LoadDriver<T>() where T : IModDriver, new()
 		{
-			m_Driver = new T();
-			return (T)m_Driver;
+			Driver = new T();
+			return (T)Driver;
 		}
 
 		internal static short MD_SampleLoad(SampleLoad s, int type)
 		{
 			short result = -1;
 
-			if (m_Driver != null)
+			if (Driver != null)
 			{
 				if (type == (int)MDTypes.MD_MUSIC)
 				{
@@ -106,8 +99,8 @@ namespace SharpMik.Player
 					type = (int)((Mode & Constants.DMODE_SOFT_SNDFX) == Constants.DMODE_SOFT_SNDFX ? MDDecodeTypes.MD_SOFTWARE : MDDecodeTypes.MD_HARDWARE);
 				}
 
-				SampleLoader.SL_Init(s);
-				result = m_Driver.SampleLoad(s, type);
+				_ = SampleLoader.SL_Init(s);
+				result = Driver.SampleLoad(s, type);
 				SampleLoader.SL_Exit(s);
 			}
 
@@ -116,9 +109,9 @@ namespace SharpMik.Player
 
 		internal static short[] MD_GetSample(short handle)
 		{
-			if (m_Driver != null)
+			if (Driver != null)
 			{
-				return m_Driver.GetSample(handle);
+				return Driver.GetSample(handle);
 			}
 
 			return null;
@@ -126,9 +119,9 @@ namespace SharpMik.Player
 
 		internal static short MD_SetSample(short[] sample)
 		{
-			if (m_Driver != null)
+			if (Driver != null)
 			{
-				return m_Driver.SetSample(sample);
+				return Driver.SetSample(sample);
 			}
 
 			return -1;
@@ -146,12 +139,12 @@ namespace SharpMik.Player
 				type = (int)((Mode & Constants.DMODE_SOFT_SNDFX) != 0 ? MDDecodeTypes.MD_SOFTWARE : MDDecodeTypes.MD_HARDWARE);
 			}
 
-			return m_Driver.FreeSampleSpace(type);
+			return Driver.FreeSampleSpace(type);
 		}
 
 		public static void Voice_Stop_internal(byte voice)
 		{
-			if ((voice < 0) || (voice >= md_numchn))
+			if (voice >= md_numchn)
 			{
 				return;
 			}
@@ -162,7 +155,7 @@ namespace SharpMik.Player
 				sfxinfo[voice - md_sngchn] = 0;
 			}
 
-			m_Driver.VoiceStop(voice);
+			Driver.VoiceStop(voice);
 		}
 
 		internal static bool Voice_Stopped_internal(sbyte voice)
@@ -172,7 +165,7 @@ namespace SharpMik.Player
 				return false;
 			}
 
-			return m_Driver.VoiceStopped((byte)voice);
+			return Driver.VoiceStopped((byte)voice);
 		}
 
 		internal static void Voice_Play_internal(sbyte voice, Sample s, uint start)
@@ -196,7 +189,7 @@ namespace SharpMik.Player
 				}
 			}
 
-			m_Driver.VoicePlay((byte)voice, s.handle, start, s.length, s.loopstart, repend, s.flags);
+			Driver.VoicePlay((byte)voice, s.handle, start, s.length, s.loopstart, repend, s.flags);
 		}
 
 		internal static void Voice_SetVolume_internal(sbyte voice, ushort vol)
@@ -225,7 +218,7 @@ namespace SharpMik.Player
 			}
 
 			tmp = (uint)(vol * md_volume * ((voice < md_sngchn) ? md_musicvolume : md_sndfxvolume));
-			m_Driver.VoiceSetVolume((byte)voice, (ushort)(tmp / 16384));
+			Driver.VoiceSetVolume((byte)voice, (ushort)(tmp / 16384));
 		}
 
 		internal static void Voice_SetPanning_internal(sbyte voice, uint pan)
@@ -250,7 +243,7 @@ namespace SharpMik.Player
 				pan = (uint)(((short)(pan - 128) * md_pansep / 128) + 128);
 			}
 
-			m_Driver.VoiceSetPanning((byte)voice, pan);
+			Driver.VoiceSetPanning((byte)voice, pan);
 		}
 
 		internal static void Voice_SetFrequency_internal(sbyte voice, uint frq)
@@ -265,7 +258,7 @@ namespace SharpMik.Player
 				frq /= md_sample[voice].divfactor;
 			}
 
-			m_Driver.VoiceSetFrequency((byte)voice, frq);
+			Driver.VoiceSetFrequency((byte)voice, frq);
 		}
 
 		static void LimitHardVoices(int limit)
@@ -328,7 +321,7 @@ namespace SharpMik.Player
 				}
 			}
 
-			md_numchn = (byte)(md_hardchn + md_softchn);
+			md_numchn = (byte)(md_hardchn + SoftwareChannel);
 		}
 
 		static void LimitSoftVoices(int limit)
@@ -347,19 +340,19 @@ namespace SharpMik.Player
 
 			if ((Mode & Constants.DMODE_SOFT_SNDFX) == Constants.DMODE_SOFT_SNDFX)
 			{
-				md_softchn = md_sfxchn;
+				SoftwareChannel = md_sfxchn;
 			}
 			else
 			{
-				md_softchn = 0;
+				SoftwareChannel = 0;
 			}
 
 			if ((Mode & Constants.DMODE_SOFT_MUSIC) == Constants.DMODE_SOFT_MUSIC)
 			{
-				md_softchn += md_sngchn;
+				SoftwareChannel += md_sngchn;
 			}
 
-			while (md_softchn > limit)
+			while (SoftwareChannel > limit)
 			{
 				if ((++t & 1) == 1)
 				{
@@ -378,20 +371,20 @@ namespace SharpMik.Player
 
 				if ((Mode & Constants.DMODE_SOFT_SNDFX) != Constants.DMODE_SOFT_SNDFX)
 				{
-					md_softchn = md_sfxchn;
+					SoftwareChannel = md_sfxchn;
 				}
 				else
 				{
-					md_softchn = 0;
+					SoftwareChannel = 0;
 				}
 
 				if ((Mode & Constants.DMODE_SOFT_MUSIC) != Constants.DMODE_SOFT_MUSIC)
 				{
-					md_softchn += md_sngchn;
+					SoftwareChannel += md_sngchn;
 				}
 			}
 
-			md_numchn = (byte)(md_hardchn + md_softchn);
+			md_numchn = (byte)(md_hardchn + SoftwareChannel);
 		}
 
 		// should be moved into own file..
@@ -407,7 +400,7 @@ namespace SharpMik.Player
 		{
 			if (!isplaying)
 			{
-				if (m_Driver.PlayStart())
+				if (Driver.PlayStart())
 				{
 					return true;
 				}
@@ -426,7 +419,7 @@ namespace SharpMik.Player
 			{
 				if (ModPlayer.s_Module != null || (!ModPlayer.s_Module.Forbid))
 				{
-					m_Driver.Update();
+					Driver.Update();
 				}
 			}
 		}
@@ -437,21 +430,21 @@ namespace SharpMik.Player
 			{
 				if (pause)
 				{
-					m_Driver.Pause();
+					Driver.Pause();
 				}
 				else
 				{
-					m_Driver.Resume();
+					Driver.Resume();
 				}
 			}
 		}
 
-		static internal void MikMod_DisableOutput_internal()
+		internal static void MikMod_DisableOutput_internal()
 		{
-			if (isplaying && m_Driver != null)
+			if (isplaying && Driver != null)
 			{
 				isplaying = false;
-				m_Driver.PlayStop();
+				Driver.PlayStop();
 			}
 		}
 
@@ -494,13 +487,13 @@ namespace SharpMik.Player
 
 			md_numchn = (byte)(md_sngchn + md_sfxchn);
 
-			LimitHardVoices(m_Driver.HardVoiceLimit);
-			LimitSoftVoices(m_Driver.SoftVoiceLimit);
+			LimitHardVoices(Driver.HardVoiceLimit);
+			LimitSoftVoices(Driver.SoftVoiceLimit);
 
-			if (m_Driver.SetNumVoices())
+			if (Driver.SetNumVoices())
 			{
 				MikMod_Exit_internal();
-				md_numchn = md_softchn = md_hardchn = md_sfxchn = md_sngchn = 0;
+				md_numchn = SoftwareChannel = md_hardchn = md_sfxchn = md_sngchn = 0;
 				return true;
 			}
 
@@ -526,7 +519,7 @@ namespace SharpMik.Player
 
 			if (resume)
 			{
-				MikMod_EnableOutput_internal();
+				_ = MikMod_EnableOutput_internal();
 			}
 
 			return false;
@@ -535,7 +528,7 @@ namespace SharpMik.Player
 		static void MikMod_Exit_internal()
 		{
 			MikMod_DisableOutput_internal();
-			m_Driver.Exit();
+			Driver.Exit();
 			md_numchn = md_sfxchn = md_sngchn = 0;
 
 			if (sfxinfo != null)
@@ -555,14 +548,14 @@ namespace SharpMik.Player
 
 		static bool _mm_init(string cmdline)
 		{
-			m_Driver.CommandLine(cmdline);
+			Driver.CommandLine(cmdline);
 
-			if (m_Driver.IsPresent())
+			if (Driver.IsPresent())
 			{
-				if (m_Driver.Init())
+				if (Driver.Init())
 				{
 					MikMod_Exit_internal();
-					m_Driver = null;
+					Driver = null;
 					throw new Exception("Failed to init driver!");
 				}
 			}
@@ -592,10 +585,10 @@ namespace SharpMik.Player
 			if (isplaying)
 			{
 				wasplaying = true;
-				m_Driver.PlayStop();
+				Driver.PlayStop();
 			}
 
-			if (m_Driver.Reset())
+			if (Driver.Reset())
 			{
 				MikMod_Exit_internal();
 				return true;
@@ -603,7 +596,7 @@ namespace SharpMik.Player
 
 			if (wasplaying)
 			{
-				m_Driver.PlayStart();
+				_ = Driver.PlayStart();
 			}
 
 			return false;

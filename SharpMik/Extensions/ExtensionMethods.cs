@@ -1,8 +1,8 @@
 ﻿using System.IO;
 
-namespace SharpMik.Extentions
+namespace SharpMik.Extensions
 {
-	public static class ExtentionMethods
+	public static class ExtensionMethods
 	{
 		public static void Write(this BinaryWriter value, sbyte[] buffer, int start, int count)
 		{

@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
 using SharpMik.Common;
 using SharpMik.Player;
+using System;
+using System.Collections.Generic;
 
 namespace SharpMik.SoftwareMixers
 {
-	abstract public class CommonSoftwareMixer
+	public abstract class CommonSoftwareMixer
 	{
 		protected class VoiceInfo
 		{
@@ -71,9 +71,9 @@ namespace SharpMik.SoftwareMixers
 
 		public bool Init()
 		{
-			MixerInit();
+			_ = MixerInit();
 
-			m_Samples = new List<short[]>();
+			m_Samples = [];
 
 			m_VcTickBuf = new int[TICKLSIZE];
 
@@ -105,10 +105,7 @@ namespace SharpMik.SoftwareMixers
 			return false;
 		}
 
-		protected void FireCallBack(int portion)
-		{
-			VC_Callback?.Invoke(m_VcTickBuf, portion);
-		}
+		protected void FireCallBack(int portion) => VC_Callback?.Invoke(m_VcTickBuf, portion);
 
 		public void DeInit()
 		{
@@ -405,7 +402,7 @@ namespace SharpMik.SoftwareMixers
 			}
 
 			todo = bytes2samples(todo);
-			WriteSamples(buf, todo);
+			_ = WriteSamples(buf, todo);
 
 			// 			if (m_DspProcessor != null)
 			// 			{
@@ -418,17 +415,12 @@ namespace SharpMik.SoftwareMixers
 		uint SilenceBytes(sbyte[] buf, uint todo)
 		{
 			todo = samples2bytes(bytes2samples(todo));
+			var toSet = unchecked((sbyte)0x80);
 
-			sbyte toSet = 0;
 			/* clear the buffer to zero (16 bits signed) or 0x80 (8 bits unsigned) */
 			if ((m_VcMode & Constants.DMODE_16BITS) == Constants.DMODE_16BITS)
 			{
 				toSet = 0;
-			}
-			else
-			{
-				var value = 0x80;
-				toSet = (sbyte)value;
 			}
 
 			for (var i = 0; i < todo; i++)

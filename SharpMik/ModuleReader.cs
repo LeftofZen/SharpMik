@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 
 namespace SharpMik.IO
 {
@@ -22,7 +22,7 @@ namespace SharpMik.IO
 		#region stream functions
 		public bool Seek(int offset, SeekOrigin origin)
 		{
-			BaseStream.Seek(offset, origin);
+			_ = BaseStream.Seek(offset, origin);
 			return BaseStream.Position < BaseStream.Length;
 		}
 
@@ -67,10 +67,7 @@ namespace SharpMik.IO
 			}
 		}
 
-		public virtual sbyte Read_sbyte()
-		{
-			return (sbyte)ReadByte();
-		}
+		public virtual sbyte Read_sbyte() => (sbyte)ReadByte();
 
 		public virtual bool Read_bytes(byte[] buffer, int number)
 		{
@@ -263,7 +260,7 @@ namespace SharpMik.IO
 		public string Read_String(int length)
 		{
 			var tmpBuffer = new byte[length];
-			Read(tmpBuffer, 0, length);
+			_ = Read(tmpBuffer, 0, length);
 			return System.Text.Encoding.UTF8.GetString(tmpBuffer, 0, length).Trim(['\0']);
 		}
 	}

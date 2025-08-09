@@ -1,10 +1,10 @@
-﻿using System;
-using SharpMik.Player;
-using SharpMik.Drivers;
 using SharpMik;
+using SharpMik.Common;
+using SharpMik.Drivers;
+using SharpMik.Player;
+using System;
 using System.Diagnostics;
 using System.Threading;
-using SharpMik.Common;
 
 namespace mikmodSpeedTest
 {
@@ -23,8 +23,8 @@ namespace mikmodSpeedTest
 
 				if (args.Length == 0)
 				{
-					ModDriver.LoadDriver<NoAudio>();
-					ModDriver.MikMod_Init("");
+					_ = ModDriver.LoadDriver<NoAudio>();
+					_ = ModDriver.MikMod_Init("");
 					mod = ModuleLoader.Load("Music1.mod");
 					modName = "Music1.mod";
 				}
@@ -32,14 +32,14 @@ namespace mikmodSpeedTest
 				{
 					if (args.Length > 2)
 					{
-						ModDriver.LoadDriver<NoAudio>();
+						_ = ModDriver.LoadDriver<NoAudio>();
 					}
 					else
 					{
-						ModDriver.LoadDriver<WavDriver>();
+						_ = ModDriver.LoadDriver<WavDriver>();
 					}
 
-					ModDriver.MikMod_Init(args[1]);
+					_ = ModDriver.MikMod_Init(args[1]);
 					mod = ModuleLoader.Load(args[0]);
 					modName = args[0];
 				}

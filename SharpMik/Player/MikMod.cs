@@ -1,45 +1,44 @@
-﻿using System;
-using SharpMik.Interfaces;
-using System.IO;
 using SharpMik.Common;
+using SharpMik.Interfaces;
+using System;
+using System.IO;
 
 namespace SharpMik.Player
 {
 	public class MikMod
 	{
-		string m_Error;
-		string m_CommandLine;
+		string commandLine;
 
 		public event ModPlayer.PlayerStateChangedEvent PlayerStateChangeEvent;
 
-		public bool HasError => !string.IsNullOrEmpty(m_Error);
+		public bool HasError => !string.IsNullOrEmpty(error);
 
+		public static int Playback_CurrentPattern => ModPlayer.s_Module.Playback_SongPosition;
+		public static int Playback_CurrentPatternRowNumber => ModPlayer.s_Module.Playback_PatternRowNumber;
+		public static int NumRowsOnCurrentPattern => ModPlayer.s_Module.NumRowsOnCurrentPattern;
+
+		string error;
 		public string ErrorMessage
 		{
 			get
 			{
-				var error = m_Error;
-				m_Error = null;
+				var error = this.error;
+				this.error = null;
 				return error;
 			}
+			set { error = value; }
 		}
 
-		public MikMod()
-		{
-			ModPlayer.PlayStateChangedHandle += new ModPlayer.PlayerStateChangedEvent(ModPlayer_PlayStateChangedHandle);
-		}
+		public MikMod() => ModPlayer.PlayStateChangedHandle += new ModPlayer.PlayerStateChangedEvent(ModPlayer_PlayStateChangedHandle);
 
-		void ModPlayer_PlayStateChangedHandle(ModPlayer.PlayerState state)
-		{
-			PlayerStateChangeEvent?.Invoke(state);
-		}
+		void ModPlayer_PlayStateChangedHandle(ModPlayer.PlayerState state) => PlayerStateChangeEvent?.Invoke(state);
 
 		public static float GetProgress()
 		{
-			if (ModPlayer.mod != null)
+			if (ModPlayer.s_Module != null)
 			{
-				float current = (ModPlayer.mod.SongPosition * ModPlayer.mod.NumRowsOnCurrentPattern) + ModPlayer.mod.PatternRowNumber;
-				float total = ModPlayer.mod.NumPositions * ModPlayer.mod.NumRowsOnCurrentPattern;
+				float current = (ModPlayer.s_Module.Playback_SongPosition * ModPlayer.s_Module.NumRowsOnCurrentPattern) + ModPlayer.s_Module.Playback_PatternRowNumber;
+				float total = ModPlayer.s_Module.NumPositions * ModPlayer.s_Module.NumRowsOnCurrentPattern;
 
 				return current / total;
 			}
@@ -51,15 +50,15 @@ namespace SharpMik.Player
 
 		public bool Init<T>(string command) where T : IModDriver, new()
 		{
-			m_CommandLine = command;
-			ModDriver.LoadDriver<T>();
+			commandLine = command;
+			_ = ModDriver.LoadDriver<T>();
 
 			return ModDriver.MikMod_Init(command);
 		}
 
 		public T Init<T>(string command, out bool result) where T : IModDriver, new()
 		{
-			m_CommandLine = command;
+			commandLine = command;
 			var driver = ModDriver.LoadDriver<T>();
 
 			result = ModDriver.MikMod_Init(command);
@@ -67,13 +66,13 @@ namespace SharpMik.Player
 			return driver;
 		}
 
-		public void Reset() => ModDriver.MikMod_Reset(m_CommandLine);
+		public void Reset() => ModDriver.MikMod_Reset(commandLine);
 
 		public static void Exit() => ModDriver.MikMod_Exit();
 
 		public Module LoadModule(string fileName)
 		{
-			m_Error = null;
+			error = null;
 			if (ModDriver.Driver != null)
 			{
 				try
@@ -82,12 +81,12 @@ namespace SharpMik.Player
 				}
 				catch (Exception ex)
 				{
-					m_Error = ex.Message;
+					error = ex.Message;
 				}
 			}
 			else
 			{
-				m_Error = "A Driver needs to be set before loading a module";
+				error = "A Driver needs to be set before loading a module";
 			}
 
 			return null;
@@ -95,7 +94,7 @@ namespace SharpMik.Player
 
 		public Module LoadModule(Stream stream)
 		{
-			m_Error = null;
+			error = null;
 			if (ModDriver.Driver != null)
 			{
 				try
@@ -104,12 +103,12 @@ namespace SharpMik.Player
 				}
 				catch (Exception ex)
 				{
-					m_Error = ex.Message;
+					error = ex.Message;
 				}
 			}
 			else
 			{
-				m_Error = "A Driver needs to be set before loading a module";
+				error = "A Driver needs to be set before loading a module";
 			}
 
 			return null;
@@ -124,9 +123,9 @@ namespace SharpMik.Player
 
 		public static void UnLoadCurrent()
 		{
-			if (ModPlayer.mod != null)
+			if (ModPlayer.s_Module != null)
 			{
-				ModuleLoader.UnLoad(ModPlayer.mod);
+				ModuleLoader.UnLoad(ModPlayer.s_Module);
 			}
 		}
 
@@ -170,15 +169,15 @@ namespace SharpMik.Player
 		// the bonus of fast forwarding over setting the position is that it will know the real state of the mod.
 		public static void FastForwardTo(int position)
 		{
-			ModPlayer.Player_Mute_Channel(MuteOptions.MuteAll, null);
+			_ = ModPlayer.Player_Mute_Channel(MuteOptions.MuteAll, null);
 			ModDriver.Driver_Pause(true);
-			while (ModPlayer.mod.SongPosition != position)
+			while (ModPlayer.s_Module.Playback_SongPosition != position)
 			{
 				ModDriver.MikMod_Update();
 			}
 
 			ModDriver.Driver_Pause(false);
-			ModPlayer.Player_UnMute_Channel(MuteOptions.MuteAll, null);
+			_ = ModPlayer.Player_UnMute_Channel(MuteOptions.MuteAll, null);
 		}
 
 		public static void MuteChannel(int channel) => ModPlayer.Player_Mute_Channel(channel);

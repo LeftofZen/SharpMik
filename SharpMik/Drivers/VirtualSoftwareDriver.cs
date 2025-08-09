@@ -1,8 +1,8 @@
-﻿using System;
-using SharpMik.Interfaces;
-using SharpMik.SoftwareMixers;
-using SharpMik.Player;
 using SharpMik.Common;
+using SharpMik.Interfaces;
+using SharpMik.Player;
+using SharpMik.SoftwareMixers;
+using System;
 
 namespace SharpMik.Drivers
 {
@@ -21,7 +21,7 @@ namespace SharpMik.Drivers
 			return m_SoftwareMixer.Init();
 		}
 
-		private void SetupMixer()
+		void SetupMixer()
 		{
 			if (m_SoftwareMixer != null)
 			{
